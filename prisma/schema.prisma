@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Instrument {
+  id            String   @id @default(cuid())
+  type          InstrumentType
+  marque        String
+  modele        String
+  surnom        String?
+  diapason      String
+  radius        Radius
+  dateCreation  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  observations  Observation[]
+  mesures       MeasureOriginal[]
+  regolages     Reglage[]
+}
+
+model Observation {
+  id               String         @id @default(cuid())
+  instrumentId     String
+  cordesGauge      String
+  controles        String
+  etatCordes       String
+  etatFrettes      FretCondition
+  frettesAutre     String?
+  elementsDevisses String?
+  piecesManquantes String?
+  sillet           SaddleCondition
+  silletAutre      String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  instrument       Instrument     @relation(fields: [instrumentId], references: [id], onDelete: Cascade)
+}
+
+model MeasureOriginal {
+  id                 String           @id @default(cuid())
+  instrumentId       String
+  actionBass12       Float
+  actionTreble12     Float
+  courbureManche10   Float
+  formePontet        BridgeShape
+  dateMesure         String
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  instrument         Instrument       @relation(fields: [instrumentId], references: [id], onDelete: Cascade)
+  micros             MeasureMicro[]
+  test               TestAfterMeasure?
+}
+
+model MeasureMicro {
+  id                 String           @id @default(cuid())
+  mesureOriginaleId  String
+  position           MicrophonePosition
+  hauteurBass        Float
+  hauteurTreble      Float
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  mesureOriginale    MeasureOriginal  @relation(fields: [mesureOriginaleId], references: [id], onDelete: Cascade)
+}
+
+model TestAfterMeasure {
+  id                 String            @id @default(cuid())
+  mesureOriginaleId  String            @unique
+  frise              Boolean
+  vibrations         Boolean
+  son                SoundResult
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  mesureOriginale    MeasureOriginal   @relation(fields: [mesureOriginaleId], references: [id], onDelete: Cascade)
+}
+
+model Reglage {
+  id                 String             @id @default(cuid())
+  instrumentId       String
+  dateSaisie         String
+  actionSillet       Float
+  courbureManche     Float
+  action12frette     Float
+  radiusChevalet     Float
+  intonation         String
+  ordre              Int
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  instrument         Instrument         @relation(fields: [instrumentId], references: [id], onDelete: Cascade)
+  micros             ReglageMicro[]
+}
+
+model ReglageMicro {
+  id          String       @id @default(cuid())
+  reglageId   String
+  position    MicrophonePosition
+  hauteur     Float
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  reglage     Reglage      @relation(fields: [reglageId], references: [id], onDelete: Cascade)
+}
+
+enum InstrumentType {
+  guitar
+  bass
+  ukulele
+}
+
+enum FretCondition {
+  ras
+  polish
+  planarity
+  other
+}
+
+enum SaddleCondition {
+  ok
+  change
+  adjust
+  other
+}
+
+enum BridgeShape {
+  radius
+  adjust
+}
+
+enum SoundResult {
+  ok
+  ko
+}
+
+enum MicrophonePosition {
+  neck
+  middle
+  bridge
+}
+
+enum Radius {
+  r7_5
+  r9_5
+  r10
+  r12
+  r14
+  r16
+  compound
+}

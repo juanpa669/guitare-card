@@ -1,0 +1,6 @@
+{
+  "command": "npm run dev",
+  "url": "http://localhost:3000",
+  "hotReload": true,
+  "disableInspect": false
+}
