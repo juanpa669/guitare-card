@@ -11,8 +11,8 @@ import type { InstrumentType } from '@/types';
 
 const FIELD_TOOLTIPS: Record<string, string> = {
   actionSillet: 'Mesurer la hauteur des cordes au sillet (1ère frette) avec des cales. Viser 0.3-0.5mm pour E grave et 0.2-0.3mm pour E aigu.',
-  courbureManche: 'Mesurer avec des cales la distance entre la frette et la corde à la dixième case. Viser 0.2 mm pour une action basse, 0.1 mm pour une action moyenne.',
-  action12frette: 'Mesurer la hauteur des cordes à la 12ème frette. Viser 1.5mm grave / 1.0mm aigu pour une action standard.',
+  courbureManche: 'Relief du manche : mesurer à la 12e frette (cordes aux 1ère et dernières cases). Fender (radius 9.5"–12") : 0,25 mm (0,010"). Radius 7,25" : 0,30 mm (0,012"). Général : 0,2–0,5 mm. Ces valeurs sont des références — le réglage final dépend du tirant des cordes et du style de jeu.',
+  action12frette: 'Action 12e frette (sommet frette → face inférieure corde, guitare accordée). Classique : 3 mm aigu / 4 mm grave. Électrique : 1,2–1,6 mm aigu / 2,0 mm grave. Acoustique acier : 2,0–2,4 mm aigu / 2,5–2,8 mm grave. Action basse : ~2,5 mm aigu / 3,4 mm grave. Action haute : 3,5 mm aigu / 5,5 mm grave. Valeurs indicatives — ajuster selon style de jeu et tirant.',
   radiusChevalet: 'Ajuster le rayon des pontets pour correspondre au rayon de la touche.',
   intonation: 'Vérifier l\'intonation case par case. La note à la 12ème frette doit être identique à l\'octave supérieure (corde à vide).',
 };
