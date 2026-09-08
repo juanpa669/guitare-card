@@ -97,7 +97,7 @@ export default function ReglagesPage() {
     }
   }, [instrument]);
 
-  const positions: MicrophonePosition[] = numMics === 1 ? ['neck'] : numMics === 2 ? ['neck', 'bridge'] : ['neck', 'middle', 'bridge'];
+  const positions: MicrophonePosition[] = numMics === 1 ? ['neck'] : numMics === 2 ? ['neck', 'bridge'] : numMics === 3 ? ['neck', 'middle', 'bridge'] : [];
 
   const updateMicro = (idx: number, field: string, value: string) => {
     const newMicros = [...micros];
@@ -155,7 +155,9 @@ export default function ReglagesPage() {
       }, positions.map((pos, i) => {
         const micro = micros[i];
         let microBrandVal: string | null = null;
-        if (micro?.microBrand) {
+        if (numMics === 1 && microBrand) {
+          microBrandVal = microBrand === 'Autres' ? microBrandCustom || null : microBrand;
+        } else if (micro?.microBrand) {
           microBrandVal = micro.microBrand === 'Autres' ? micro.microBrandCustom || null : micro.microBrand;
         }
         return {
@@ -363,7 +365,10 @@ export default function ReglagesPage() {
             const posIndex = positions.indexOf(pos);
             const micro = micros[posIndex] || { hauteur: '', microBrand: '', microBrandCustom: '' };
             const isCustomMicroBrand = micro.microBrand === 'Autres';
-            const finalMicroBrand = isCustomMicroBrand ? micro.microBrandCustom : micro.microBrand;
+            const showPerPositionBrand = numMics > 1 || !microBrand;
+            const effectiveMicroBrand = showPerPositionBrand ? micro.microBrand : microBrand;
+            const effectiveMicroBrandCustom = showPerPositionBrand ? micro.microBrandCustom : microBrandCustom;
+            const isCustomEffective = effectiveMicroBrand === 'Autres';
             return (
               <div key={pos} className="card p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -372,30 +377,38 @@ export default function ReglagesPage() {
                     <span className="text-xs text-primary">✓ Préréglé</span>
                   )}
                 </div>
-                <div className="form-group">
-                  <label>Marque du micro</label>
-                  <select
-                    value={micro.microBrand}
-                    onChange={e => {
-                      updateMicro(posIndex, 'microBrand', e.target.value);
-                      if (e.target.value !== 'Autres') {
-                        updateMicro(posIndex, 'microBrandCustom', '');
-                      }
-                    }}
-                  >
-                    <option value="">Sélectionner</option>
-                    {PICKUP_BRANDS.map(brand => (
-                      <option key={brand} value={brand}>{brand}</option>
-                    ))}
-                  </select>
-                </div>
-                {isCustomMicroBrand && (
+                {showPerPositionBrand && (
+                  <div className="form-group">
+                    <label>Marque du micro</label>
+                    <select
+                      value={micro.microBrand}
+                      onChange={e => {
+                        updateMicro(posIndex, 'microBrand', e.target.value);
+                        if (e.target.value !== 'Autres') {
+                          updateMicro(posIndex, 'microBrandCustom', '');
+                        }
+                      }}
+                    >
+                      <option value="">Sélectionner</option>
+                      {PICKUP_BRANDS.map(brand => (
+                        <option key={brand} value={brand}>{brand}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {isCustomEffective && (
                   <div className="form-group">
                     <label>Marque personnalisée</label>
                     <input
                       type="text"
-                      value={micro.microBrandCustom}
-                      onChange={e => updateMicro(posIndex, 'microBrandCustom', e.target.value)}
+                      value={effectiveMicroBrandCustom}
+                      onChange={e => {
+                        if (showPerPositionBrand) {
+                          updateMicro(posIndex, 'microBrandCustom', e.target.value);
+                        } else {
+                          setMicroBrandCustom(e.target.value);
+                        }
+                      }}
                       placeholder="Nom du fabricant..."
                     />
                   </div>

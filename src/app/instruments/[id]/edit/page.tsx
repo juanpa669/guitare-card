@@ -6,7 +6,7 @@ import { getInstrument, updateInstrument } from '@/lib/actions';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { InstrumentType, Radius } from '@/types';
-import { GUITAR_BRANDS, STRING_COUNTS_GUITAR, STRING_COUNTS_BASS, STRING_COUNTS_UKULELE, MICRO_COUNTS } from '@/lib/constants';
+import { GUITAR_BRANDS, STRING_COUNTS_GUITAR, STRING_COUNTS_BASS, STRING_COUNTS_UKULELE, MICRO_COUNTS, getAllBrands, addCustomBrand } from '@/lib/constants';
 
 const DIAPASONS: { value: number; label: string; unit: string; range: string }[] = [
   { value: 596, label: 'Fender Jaguar/Jazzmaster', unit: 'mm', range: '23.46"' },
@@ -54,7 +54,8 @@ export default function EditInstrumentPage() {
   useEffect(() => {
     getInstrument(id).then(inst => {
       if (inst) {
-        const brandExists = GUITAR_BRANDS.includes(inst.marque as any);
+        const allBrands = getAllBrands();
+        const brandExists = allBrands.includes(inst.marque as any);
         setSelectedBrand(brandExists ? inst.marque : 'Autres');
         setForm({
           type: inst.type,
@@ -79,6 +80,9 @@ export default function EditInstrumentPage() {
     const diapason = DIAPASONS.find(d => d.value === form.diapasonValue) || DIAPASONS[2];
 
     startTransition(async () => {
+      if (isCustomBrand && form.marqueCustom.trim()) {
+        addCustomBrand(form.marqueCustom.trim());
+      }
       await updateInstrument(id, {
         type: form.type,
         marque: finalBrand.trim(),
@@ -126,7 +130,7 @@ export default function EditInstrumentPage() {
               required
             >
               <option value="">Sélectionner une marque</option>
-              {GUITAR_BRANDS.map(brand => (
+              {getAllBrands().map(brand => (
                 <option key={brand} value={brand}>{brand}</option>
               ))}
             </select>

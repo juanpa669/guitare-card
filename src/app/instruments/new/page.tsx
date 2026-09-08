@@ -6,7 +6,7 @@ import { createInstrument } from '@/lib/actions';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { InstrumentType, Diapason, Radius } from '@/types';
-import { GUITAR_BRANDS, getStringsForCount, STRING_COUNTS_GUITAR, STRING_COUNTS_BASS, STRING_COUNTS_UKULELE, MICRO_COUNTS } from '@/lib/constants';
+import { getStringsForCount, STRING_COUNTS_GUITAR, STRING_COUNTS_BASS, STRING_COUNTS_UKULELE, MICRO_COUNTS, getAllBrands, addCustomBrand } from '@/lib/constants';
 
 const DIAPASONS: { value: number; label: string; unit: string; range: string }[] = [
   { value: 596, label: 'Fender Jaguar/Jazzmaster', unit: 'mm', range: '23.46"' },
@@ -55,6 +55,9 @@ export default function NewInstrumentPage() {
     const diapason = DIAPASONS.find(d => d.value === form.diapasonValue) || DIAPASONS[2];
 
     startTransition(async () => {
+      if (isCustomBrand && form.marqueCustom.trim()) {
+        addCustomBrand(form.marqueCustom.trim());
+      }
       await createInstrument({
         type: form.type,
         marque: finalBrand.trim(),
@@ -101,7 +104,7 @@ export default function NewInstrumentPage() {
               required
             >
               <option value="">Sélectionner une marque</option>
-              {GUITAR_BRANDS.map(brand => (
+              {getAllBrands().map(brand => (
                 <option key={brand} value={brand}>{brand}</option>
               ))}
             </select>

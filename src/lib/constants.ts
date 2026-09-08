@@ -1,4 +1,4 @@
-export const GUITAR_BRANDS = [
+const STATIC_GUITAR_BRANDS = [
   'Fender', 'Gibson', 'Epiphone', 'Music Man', 'Ernie Ball Music Man',
   'PRS', 'Yamaha', 'Ibanez', 'Cort', 'Aria', 'Aria Pro II',
   'ESP', 'ESP LTD', 'LTD', 'Jackson', 'Schecter', 'Gretsch',
@@ -7,11 +7,42 @@ export const GUITAR_BRANDS = [
   'Autres',
 ] as const;
 
-export const PICKUP_BRANDS = [
+const STATIC_PICKUP_BRANDS = [
   'Seymour Duncan', 'DiMarzio', 'EMG', 'Fishman', 'Lollar',
   'Bare Knuckle', 'Fralin', 'Lindy Fralin', 'Fender', 'Gibson',
   'Autres',
 ] as const;
+
+export const GUITAR_BRANDS = [...STATIC_GUITAR_BRANDS] as const;
+export const PICKUP_BRANDS = [...STATIC_PICKUP_BRANDS] as const;
+
+const CUSTOM_BRANDS_KEY = 'guitarCard_customBrands';
+
+export function getCustomBrands(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const data = localStorage.getItem(CUSTOM_BRANDS_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function addCustomBrand(name: string): void {
+  if (typeof window === 'undefined' || !name.trim()) return;
+  const existing = getCustomBrands();
+  if (!existing.includes(name.trim())) {
+    localStorage.setItem(CUSTOM_BRANDS_KEY, JSON.stringify([...existing, name.trim()]));
+  }
+}
+
+export function getAllBrands(): string[] {
+  return [...STATIC_GUITAR_BRANDS, ...getCustomBrands()];
+}
+
+export function getAllPickupBrands(): string[] {
+  return [...STATIC_PICKUP_BRANDS, ...getCustomBrands()];
+}
 
 export const STRING_LABELS_GUITAR = [
   'Mi grave', 'Si', 'Sol', 'Ré', 'La', 'Mi aigu',
@@ -118,6 +149,7 @@ export const STRING_COUNTS_UKULELE = [
 ];
 
 export const MICRO_COUNTS = [
+  { value: 0, label: '0 micro' },
   { value: 1, label: '1 micro' },
   { value: 2, label: '2 micros' },
   { value: 3, label: '3 micros' },
