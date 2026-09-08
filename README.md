@@ -18,7 +18,27 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Mobile App (Capacitor)
+
+L'app est packagée en application mobile native avec Capacitor.
+
+### Développement Android
+```bash
+npm run dev          # Démarre le serveur Next.js
+npx cap sync         # Sync avec Android
+npx cap run android  # Lance sur émulateur/appareil
+```
+
+Ou en une commande : `npm run cap:dev`
+
+### Build Production
+```bash
+npm run build
+npx cap sync
+npx cap open android  # Ouvre Android Studio pour le build
+```
+
+Voir [CAPACITOR.md](CAPACITOR.md) pour la documentation complète.
 
 ## Learn More
 

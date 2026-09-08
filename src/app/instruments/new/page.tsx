@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { createInstrument } from '@/lib/actions';
+import { createInstrument } from '@/lib/storage';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { InstrumentType, Diapason, Radius } from '@/types';
@@ -55,21 +55,26 @@ export default function NewInstrumentPage() {
     const diapason = DIAPASONS.find(d => d.value === form.diapasonValue) || DIAPASONS[2];
 
     startTransition(async () => {
-      if (isCustomBrand && form.marqueCustom.trim()) {
-        addCustomBrand(form.marqueCustom.trim());
+      try {
+        if (isCustomBrand && form.marqueCustom.trim()) {
+          addCustomBrand(form.marqueCustom.trim());
+        }
+        await createInstrument({
+          type: form.type,
+          marque: finalBrand.trim(),
+          modele: form.modele.trim(),
+          surnom: form.surnom.trim() || null,
+          diapason: { value: diapason.value, unit: 'mm', label: diapason.label },
+          radius: form.radius,
+          nombreCordes: form.nombreCordes,
+          nombreMicros: form.nombreMicros,
+          dateCreation: today,
+        });
+        router.push('/instruments');
+      } catch (err) {
+        console.error('Failed to create instrument:', err);
+        alert('Erreur lors de la sauvegarde: ' + (err as Error).message);
       }
-      await createInstrument({
-        type: form.type,
-        marque: finalBrand.trim(),
-        modele: form.modele.trim(),
-        surnom: form.surnom.trim() || null,
-        diapason: { value: diapason.value, unit: 'mm', label: diapason.label },
-        radius: form.radius,
-        nombreCordes: form.nombreCordes,
-        nombreMicros: form.nombreMicros,
-        dateCreation: today,
-      });
-      router.push('/instruments');
     });
   };
 

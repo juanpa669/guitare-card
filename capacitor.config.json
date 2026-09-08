@@ -1,0 +1,23 @@
+{
+  "appId": "com.guitarcard.app",
+  "appName": "Guitar Card",
+  "webDir": "out",
+  "server": {
+    "url": "http://192.168.1.193:3000"
+  },
+  "plugins": {
+    "StatusBar": {
+      "style": "Dark",
+      "backgroundColor": "#0a0a0a"
+    },
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0a0a0a",
+      "showSpinner": false
+    }
+  },
+  "android": {
+    "captureInput": true,
+    "bundleId": "com.guitarcard.app"
+  }
+}

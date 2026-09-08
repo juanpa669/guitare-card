@@ -61,23 +61,26 @@ function applyVars(vars: Record<string, string>) {
   }
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
-  const getInitialTheme = (): Theme => {
-    try {
-      const stored = localStorage.getItem('guitar-card-theme') as Theme | null;
-      if (stored) return stored;
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
-      return 'light';
-    } catch {
-      return 'dark';
-    }
-  };
+function safeGetItem(key: string): string | null {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
 
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+function safeSetItem(key: string, value: string) {
+  try { localStorage.setItem(key, value); } catch { /* ignore */ }
+}
+
+export function ThemeProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
+  const [theme, setTheme] = useState<Theme>('dark');
+
+  useEffect(() => {
+    const stored = safeGetItem('guitar-card-theme') as Theme | null;
+    const initial = stored && (stored === 'light' || stored === 'dark') ? stored : 'dark';
+    setTheme(initial);
+  }, []);
 
   useEffect(() => {
     applyVars(theme === 'dark' ? darkVars : lightVars);
-    localStorage.setItem('guitar-card-theme', theme);
+    safeSetItem('guitar-card-theme', theme);
   }, [theme]);
 
   const toggle = () => setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { getInstrument, updateInstrument } from '@/lib/actions';
+import { getInstrument, updateInstrument } from '@/lib/storage';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { InstrumentType, Radius } from '@/types';
@@ -80,20 +80,25 @@ export default function EditInstrumentPage() {
     const diapason = DIAPASONS.find(d => d.value === form.diapasonValue) || DIAPASONS[2];
 
     startTransition(async () => {
-      if (isCustomBrand && form.marqueCustom.trim()) {
-        addCustomBrand(form.marqueCustom.trim());
+      try {
+        if (isCustomBrand && form.marqueCustom.trim()) {
+          addCustomBrand(form.marqueCustom.trim());
+        }
+        await updateInstrument(id, {
+          type: form.type,
+          marque: finalBrand.trim(),
+          modele: form.modele.trim(),
+          surnom: form.surnom.trim() || null,
+          diapason: { value: diapason.value, unit: 'mm', label: diapason.label },
+          radius: form.radius,
+          nombreCordes: form.nombreCordes,
+          nombreMicros: form.nombreMicros,
+        });
+        router.push(`/instruments/${id}`);
+      } catch (err) {
+        console.error('Failed to update instrument:', err);
+        alert('Erreur lors de la sauvegarde: ' + (err as Error).message);
       }
-      await updateInstrument(id, {
-        type: form.type,
-        marque: finalBrand.trim(),
-        modele: form.modele.trim(),
-        surnom: form.surnom.trim() || null,
-        diapason: { value: diapason.value, unit: 'mm', label: diapason.label },
-        radius: form.radius,
-        nombreCordes: form.nombreCordes,
-        nombreMicros: form.nombreMicros,
-      });
-      router.push(`/instruments/${id}`);
     });
   };
 

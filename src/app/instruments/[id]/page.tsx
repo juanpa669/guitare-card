@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { getInstrument, getObservation, getMeasureOriginal, getReglages, deleteInstrument } from '@/lib/actions';
+import { getInstrument, getObservation, getMeasureOriginal, getReglages, deleteInstrument } from '@/lib/storage';
 import Link from 'next/link';
 import type { Instrument, Observation, MeasureOriginal, Reglage, ReglageString } from '@/types';
 import { ArrowLeft, Pencil, Trash2, Music, ClipboardList, Ruler, Settings, History } from 'lucide-react';

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { getObservation, createOrUpdateObservation } from '@/lib/actions';
+import { getObservation, createOrUpdateObservation } from '@/lib/storage';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { FretCondition, SaddleCondition } from '@/types';

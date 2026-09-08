@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getInstruments } from '@/lib/actions';
+import { getInstruments } from '@/lib/storage';
 import Link from 'next/link';
 import type { Instrument } from '@/types';
 import { Guitar, Plus, ArrowLeft } from 'lucide-react';

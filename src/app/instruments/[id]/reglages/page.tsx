@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { createReglage, getMeasureOriginal, getInstrument } from '@/lib/actions';
+import { createReglage, getMeasureOriginal, getInstrument } from '@/lib/storage';
 import { ArrowLeft, Plus, X, Info } from 'lucide-react';
 import Link from 'next/link';
 import type { MicrophonePosition } from '@/types';
