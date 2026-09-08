@@ -6,6 +6,7 @@ import { getInstrument, updateInstrument } from '@/lib/actions';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { InstrumentType, Radius } from '@/types';
+import { GUITAR_BRANDS, STRING_COUNTS_GUITAR, STRING_COUNTS_BASS, STRING_COUNTS_UKULELE, MICRO_COUNTS } from '@/lib/constants';
 
 const DIAPASONS: { value: number; label: string; unit: string; range: string }[] = [
   { value: 596, label: 'Fender Jaguar/Jazzmaster', unit: 'mm', range: '23.46"' },
@@ -37,22 +38,34 @@ export default function EditInstrumentPage() {
   const [form, setForm] = useState({
     type: '' as InstrumentType,
     marque: '',
+    marqueCustom: '',
     modele: '',
     surnom: '',
     diapasonValue: 0,
     radius: 'r12' as Radius,
+    nombreCordes: 6,
+    nombreMicros: 2,
   });
+  const [selectedBrand, setSelectedBrand] = useState('');
+
+  const isCustomBrand = selectedBrand === 'Autres';
+  const finalBrand = isCustomBrand ? form.marqueCustom : selectedBrand;
 
   useEffect(() => {
     getInstrument(id).then(inst => {
       if (inst) {
+        const brandExists = GUITAR_BRANDS.includes(inst.marque as any);
+        setSelectedBrand(brandExists ? inst.marque : 'Autres');
         setForm({
           type: inst.type,
           marque: inst.marque,
+          marqueCustom: brandExists ? '' : inst.marque,
           modele: inst.modele,
           surnom: inst.surnom || '',
           diapasonValue: inst.diapason.value,
           radius: inst.radius,
+          nombreCordes: inst.nombreCordes || 6,
+          nombreMicros: inst.nombreMicros || 2,
         });
       }
       setLoading(false);
@@ -61,18 +74,20 @@ export default function EditInstrumentPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.marque.trim() || !form.modele.trim()) return;
+    if (!finalBrand?.trim() || !form.modele.trim()) return;
 
     const diapason = DIAPASONS.find(d => d.value === form.diapasonValue) || DIAPASONS[2];
 
     startTransition(async () => {
       await updateInstrument(id, {
         type: form.type,
-        marque: form.marque.trim(),
+        marque: finalBrand.trim(),
         modele: form.modele.trim(),
         surnom: form.surnom.trim() || null,
         diapason: { value: diapason.value, unit: 'mm', label: diapason.label },
         radius: form.radius,
+        nombreCordes: form.nombreCordes,
+        nombreMicros: form.nombreMicros,
       });
       router.push(`/instruments/${id}`);
     });
@@ -103,20 +118,64 @@ export default function EditInstrumentPage() {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="form-group">
+            <label>Marque</label>
+            <select
+              value={selectedBrand}
+              onChange={e => setSelectedBrand(e.target.value)}
+              required
+            >
+              <option value="">Sélectionner une marque</option>
+              {GUITAR_BRANDS.map(brand => (
+                <option key={brand} value={brand}>{brand}</option>
+              ))}
+            </select>
+          </div>
+
+          {isCustomBrand && (
             <div className="form-group">
-              <label>Marque</label>
-              <input type="text" value={form.marque} onChange={e => setForm(f => ({ ...f, marque: e.target.value }))} required />
+              <label>Marque personnalisée</label>
+              <input
+                type="text"
+                value={form.marqueCustom}
+                onChange={e => setForm(f => ({ ...f, marqueCustom: e.target.value }))}
+                placeholder="Nom de la marque..."
+              />
             </div>
-            <div className="form-group">
-              <label>Modèle</label>
-              <input type="text" value={form.modele} onChange={e => setForm(f => ({ ...f, modele: e.target.value }))} required />
-            </div>
+          )}
+
+          <div className="form-group">
+            <label>Modèle</label>
+            <input type="text" value={form.modele} onChange={e => setForm(f => ({ ...f, modele: e.target.value }))} required />
           </div>
 
           <div className="form-group">
             <label>Surnom <span className="text-muted-foreground font-normal">(facultatif)</span></label>
             <input type="text" value={form.surnom} onChange={e => setForm(f => ({ ...f, surnom: e.target.value }))} />
+          </div>
+
+          <div className="form-group">
+            <label>Nombre de cordes</label>
+            <select
+              value={form.nombreCordes}
+              onChange={e => setForm(f => ({ ...f, nombreCordes: Number(e.target.value) }))}
+            >
+              {(form.type === 'bass' ? STRING_COUNTS_BASS : form.type === 'ukulele' ? STRING_COUNTS_UKULELE : STRING_COUNTS_GUITAR).map(s => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Nombre de micros</label>
+            <select
+              value={form.nombreMicros}
+              onChange={e => setForm(f => ({ ...f, nombreMicros: Number(e.target.value) }))}
+            >
+              {MICRO_COUNTS.map(m => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
           </div>
 
           <div className="form-group">

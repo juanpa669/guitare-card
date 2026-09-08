@@ -4,8 +4,9 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getInstrument, getObservation, getMeasureOriginal, getReglages, deleteInstrument } from '@/lib/actions';
 import Link from 'next/link';
-import type { Instrument, Observation, MeasureOriginal, Reglage } from '@/types';
+import type { Instrument, Observation, MeasureOriginal, Reglage, ReglageString } from '@/types';
 import { ArrowLeft, Pencil, Trash2, Music, ClipboardList, Ruler, Settings, History } from 'lucide-react';
+import { formatRadius } from '@/lib/constants';
 
 type Tab = 'identification' | 'observations' | 'measures' | 'reglages';
 
@@ -98,12 +99,20 @@ export default function InstrumentDetailPage() {
               <span>{instrument.type === 'guitar' ? 'Guitare' : instrument.type === 'bass' ? 'Basse' : 'Ukulélé'}</span>
             </div>
             <div className="flex justify-between">
+              <span className="text-muted-foreground">Marque</span>
+              <span>{instrument.marque}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Modèle</span>
+              <span>{instrument.modele}</span>
+            </div>
+            <div className="flex justify-between">
               <span className="text-muted-foreground">Diapason</span>
-              <span>{instrument.diapason.value} {instrument.diapason.unit}</span>
+              <span>{instrument.diapason.value} mm ({instrument.diapason.label})</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Radius</span>
-              <span>{instrument.radius}</span>
+              <span>{formatRadius(instrument.radius as string)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Date création</span>
@@ -203,12 +212,36 @@ export default function InstrumentDetailPage() {
                   <span className="font-medium">Réglage {i + 1}</span>
                   <span className="text-sm text-muted-foreground ml-auto">{reg.dateSaisie}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div><span className="text-muted-foreground">Action sillet:</span> {reg.actionSillet} mm</div>
+                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                   <div><span className="text-muted-foreground">Courbure:</span> {reg.courbureManche} mm</div>
                   <div><span className="text-muted-foreground">Action 12ème:</span> {reg.action12frette} mm</div>
                   <div><span className="text-muted-foreground">Radius chevalet:</span> {reg.radiusChevalet}"</div>
+                  {reg.microBrand && <div><span className="text-muted-foreground">Micro global:</span> {reg.microBrand}</div>}
                 </div>
+                {reg.micros && reg.micros.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-xs text-muted-foreground mb-1">Micros par position:</p>
+                    {reg.micros.map(m => (
+                      <div key={m.id} className="text-xs mb-1">
+                        <span className="font-medium">{m.position === 'neck' ? 'Neck' : m.position === 'middle' ? 'Middle' : 'Bridge'}</span>
+                        {m.microBrand && <span className="text-muted-foreground ml-1">({m.microBrand})</span>}
+                        <span className="text-muted-foreground ml-1">{m.hauteur} mm</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {reg.cordes && reg.cordes.length > 0 && (
+                  <div className="mb-2">
+                    <p className="text-xs text-muted-foreground mb-1">Action sillet par corde:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {reg.cordes.map(c => (
+                        <span key={c.id} className="text-xs bg-accent px-2 py-1 rounded">
+                          {c.stringLabel}: {c.hauteur}mm
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))
           ) : (

@@ -9,6 +9,7 @@ import type {
   TestAfterMeasure,
   Reglage,
   ReglageMicro,
+  ReglageString,
   InstrumentType,
   FretCondition,
   SaddleCondition,
@@ -27,6 +28,8 @@ function toInstrument(i: any): Instrument {
     surnom: i.surnom,
     diapason: JSON.parse(i.diapason),
     radius: i.radius as Radius,
+    nombreCordes: i.nombreCordes,
+    nombreMicros: i.nombreMicros,
     dateCreation: i.dateCreation,
     createdAt: i.createdAt instanceof Date ? i.createdAt : new Date(i.createdAt),
     updatedAt: i.updatedAt instanceof Date ? i.updatedAt : new Date(i.updatedAt),
@@ -94,12 +97,30 @@ function toReglage(r: any): Reglage {
     id: r.id,
     instrumentId: r.instrumentId,
     dateSaisie: r.dateSaisie,
-    actionSillet: r.actionSillet,
     courbureManche: r.courbureManche,
     action12frette: r.action12frette,
     radiusChevalet: r.radiusChevalet,
     intonation: r.intonation,
+    microBrand: r.microBrand,
     ordre: r.ordre,
+    cordes: (r.cordes || []).map((c: any) => ({
+      id: c.id,
+      reglageId: c.reglageId,
+      stringNum: c.stringNum,
+      stringLabel: c.stringLabel,
+      hauteur: c.hauteur,
+      createdAt: c.createdAt instanceof Date ? c.createdAt : new Date(c.createdAt),
+      updatedAt: c.updatedAt instanceof Date ? c.updatedAt : new Date(c.updatedAt),
+    })),
+    micros: (r.micros || []).map((m: any) => ({
+      id: m.id,
+      reglageId: m.reglageId,
+      position: m.position as MicrophonePosition,
+      hauteur: m.hauteur,
+      microBrand: m.microBrand,
+      createdAt: m.createdAt instanceof Date ? m.createdAt : new Date(m.createdAt),
+      updatedAt: m.updatedAt instanceof Date ? m.updatedAt : new Date(m.updatedAt),
+    })),
     createdAt: r.createdAt instanceof Date ? r.createdAt : new Date(r.createdAt),
     updatedAt: r.updatedAt instanceof Date ? r.updatedAt : new Date(r.updatedAt),
   };
@@ -200,18 +221,21 @@ export async function getReglages(instrumentId: string): Promise<Reglage[]> {
   const regolages = await prisma.reglage.findMany({
     where: { instrumentId },
     orderBy: { ordre: 'asc' },
+    include: { cordes: true, micros: true },
   });
   return regolages.map(toReglage);
 }
 
-export async function createReglage(data: Omit<Reglage, 'id' | 'createdAt' | 'updatedAt'>, micros: Omit<ReglageMicro, 'id' | 'reglageId' | 'createdAt' | 'updatedAt'>[]): Promise<Reglage> {
+export async function createReglage(data: Omit<Reglage, 'id' | 'createdAt' | 'updatedAt' | 'cordes' | 'micros'>, micros: Omit<ReglageMicro, 'id' | 'reglageId' | 'createdAt' | 'updatedAt'>[], cordes: Omit<ReglageString, 'id' | 'reglageId' | 'createdAt' | 'updatedAt'>[]): Promise<Reglage> {
   const nextOrdre = await prisma.reglage.count({ where: { instrumentId: data.instrumentId } });
   const reglage = await prisma.reglage.create({
     data: {
       ...data,
       ordre: nextOrdre + 1,
       micros: { create: micros },
+      cordes: { create: cordes },
     },
+    include: { cordes: true },
   });
   return toReglage(reglage);
 }

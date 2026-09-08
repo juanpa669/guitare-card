@@ -18,6 +18,8 @@ export interface Instrument {
   surnom: string | null;
   diapason: Diapason;
   radius: Radius;
+  nombreCordes: number | null;
+  nombreMicros: number;
   dateCreation: string;
   createdAt: Date;
   updatedAt: Date;
@@ -83,12 +85,24 @@ export interface Reglage {
   id: string;
   instrumentId: string;
   dateSaisie: string;
-  actionSillet: number;
   courbureManche: number;
   action12frette: number;
   radiusChevalet: number;
   intonation: string;
+  microBrand: string | null;
+  micros: ReglageMicro[];
+  cordes: ReglageString[];
   ordre: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ReglageString {
+  id: string;
+  reglageId: string;
+  stringNum: number;
+  stringLabel: string;
+  hauteur: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -98,6 +112,7 @@ export interface ReglageMicro {
   reglageId: string;
   position: MicrophonePosition;
   hauteur: number;
+  microBrand: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

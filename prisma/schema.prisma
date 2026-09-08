@@ -8,19 +8,21 @@ datasource db {
 }
 
 model Instrument {
-  id            String   @id @default(cuid())
-  type          InstrumentType
-  marque        String
-  modele        String
-  surnom        String?
-  diapason      String
-  radius        Radius
-  dateCreation  String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  observations  Observation[]
-  mesures       MeasureOriginal[]
-  regolages     Reglage[]
+  id             String     @id @default(cuid())
+  type           InstrumentType
+  marque         String
+  modele         String
+  surnom         String?
+  diapason       String
+  radius         Radius
+  nombreCordes   Int?
+  nombreMicros   Int @default(2)
+  dateCreation   String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  observations   Observation[]
+  mesures        MeasureOriginal[]
+  regolages      Reglage[]
 }
 
 model Observation {
@@ -81,16 +83,17 @@ model Reglage {
   id                 String             @id @default(cuid())
   instrumentId       String
   dateSaisie         String
-  actionSillet       Float
   courbureManche     Float
   action12frette     Float
   radiusChevalet     Float
   intonation         String
+  microBrand         String?
   ordre              Int
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   instrument         Instrument         @relation(fields: [instrumentId], references: [id], onDelete: Cascade)
   micros             ReglageMicro[]
+  cordes             ReglageString[]
 }
 
 model ReglageMicro {
@@ -98,9 +101,21 @@ model ReglageMicro {
   reglageId   String
   position    MicrophonePosition
   hauteur     Float
+  microBrand  String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   reglage     Reglage      @relation(fields: [reglageId], references: [id], onDelete: Cascade)
+}
+
+model ReglageString {
+  id          String   @id @default(cuid())
+  reglageId   String
+  stringNum   Int
+  stringLabel String
+  hauteur     Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  reglage     Reglage  @relation(fields: [reglageId], references: [id], onDelete: Cascade)
 }
 
 enum InstrumentType {
