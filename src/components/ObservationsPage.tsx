@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { getObservation, createOrUpdateObservation } from '@/lib/storage';
+import { useInstrumentId } from '@/hooks/useInstrumentId';
+import { instrumentDetailHref } from '@/lib/nav';
+import { handleFormKeyDown } from '@/lib/form';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { FretCondition, SaddleCondition } from '@/types';
@@ -14,9 +17,8 @@ const GAUGES = [
 ];
 
 export default function ObservationsPage() {
-  const params = useParams();
   const router = useRouter();
-  const id = params.id as string;
+  const id = useInstrumentId();
 
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
@@ -60,7 +62,7 @@ export default function ObservationsPage() {
         frettesAutre: form.etatFrettes === 'other' ? form.frettesAutre : null,
         silletAutre: form.sillet === 'other' ? form.silletAutre : null,
       });
-      router.push(`/instruments/${id}`);
+      router.push(instrumentDetailHref(id));
     });
   };
 
@@ -69,13 +71,13 @@ export default function ObservationsPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-center gap-4 mb-8">
-        <Link href={`/instruments/${id}`} className="p-2 rounded-lg hover:bg-accent transition-colors">
+        <Link href={instrumentDetailHref(id)} className="p-2 rounded-lg hover:bg-accent transition-colors">
           <ArrowLeft size={20} />
         </Link>
         <h1 className="text-2xl font-bold">Observations</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="space-y-6">
         <div className="card space-y-4">
           <div className="form-group">
             <label>Tirant de cordes / Gauge</label>

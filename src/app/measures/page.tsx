@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getInstruments } from '@/lib/storage';
+import { instrumentMeasuresHref } from '@/lib/nav';
 import Link from 'next/link';
 import type { Instrument } from '@/types';
 import { ArrowLeft, Ruler } from 'lucide-react';
@@ -37,7 +38,7 @@ export default function MeasuresPage() {
           {instruments.map(inst => (
             <Link
               key={inst.id}
-              href={`/instruments/${inst.id}/measures`}
+              href={instrumentMeasuresHref(inst.id)}
               className="card block hover:border-primary transition-colors"
             >
               <div className="flex items-center gap-3">

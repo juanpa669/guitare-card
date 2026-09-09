@@ -1,17 +1,16 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter, useParams } from 'next/navigation';
 import { createMeasureOriginal, createTestAfterMeasure, getMeasureOriginal } from '@/lib/storage';
+import { useInstrumentId } from '@/hooks/useInstrumentId';
+import { instrumentDetailHref } from '@/lib/nav';
+import { handleFormKeyDown } from '@/lib/form';
 import { ArrowLeft, Check, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import type { BridgeShape, MicrophonePosition } from '@/types';
 
 export default function MeasuresPage() {
-  const params = useParams();
-  const router = useParams();
-  const id = params.id as string;
-  const existingId = router.id as string | undefined;
+  const id = useInstrumentId();
 
   const [step, setStep] = useState<'form' | 'recap' | 'tests' | 'done'>('form');
   const [isPending, startTransition] = useTransition();
@@ -86,7 +85,7 @@ export default function MeasuresPage() {
         <Check size={48} className="mx-auto mb-4 text-primary" />
         <h1 className="text-2xl font-bold mb-4">Mesures enregistrées</h1>
         <p className="text-muted-foreground mb-8">Les mesures et tests ont été sauvegardés avec succès.</p>
-        <Link href={`/instruments/${id}`} className="btn-primary">Retour à l&apos;instrument</Link>
+        <Link href={instrumentDetailHref(id)} className="btn-primary">Retour à l&apos;instrument</Link>
       </div>
     );
   }
@@ -94,7 +93,7 @@ export default function MeasuresPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-center gap-4 mb-8">
-        <Link href={`/instruments/${id}`} className="p-2 rounded-lg hover:bg-accent transition-colors">
+        <Link href={instrumentDetailHref(id)} className="p-2 rounded-lg hover:bg-accent transition-colors">
           <ArrowLeft size={20} />
         </Link>
         <h1 className="text-2xl font-bold">
@@ -103,7 +102,7 @@ export default function MeasuresPage() {
       </div>
 
       {step === 'form' && (
-        <form onSubmit={e => { e.preventDefault(); handleNext(); }} className="space-y-6">
+        <form onSubmit={e => { e.preventDefault(); handleNext(); }} onKeyDown={handleFormKeyDown} className="space-y-6">
           <div className="card space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="form-group">

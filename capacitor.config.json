@@ -2,9 +2,6 @@
   "appId": "com.guitarcard.app",
   "appName": "Guitar Card",
   "webDir": "out",
-  "server": {
-    "url": "http://192.168.1.193:3000"
-  },
   "plugins": {
     "StatusBar": {
       "style": "Dark",

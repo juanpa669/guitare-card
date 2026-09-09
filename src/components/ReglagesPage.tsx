@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { createReglage, getMeasureOriginal, getInstrument } from '@/lib/storage';
+import { useInstrumentId } from '@/hooks/useInstrumentId';
+import { instrumentDetailHref } from '@/lib/nav';
+import { handleFormKeyDown } from '@/lib/form';
 import { ArrowLeft, Plus, X, Info } from 'lucide-react';
 import Link from 'next/link';
 import type { MicrophonePosition } from '@/types';
@@ -18,8 +21,7 @@ const FIELD_TOOLTIPS: Record<string, string> = {
 };
 
 export default function ReglagesPage() {
-  const params = useParams();
-  const id = params.id as string;
+  const id = useInstrumentId();
   const router = useRouter();
 
   const [isPending, startTransition] = useTransition();
@@ -170,7 +172,7 @@ export default function ReglagesPage() {
         stringLabel: c.stringLabel,
         hauteur: parseFloat(c.hauteur || '0'),
       })));
-      router.push(`/instruments/${id}`);
+      router.push(instrumentDetailHref(id));
     });
   };
 
@@ -179,13 +181,13 @@ export default function ReglagesPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-center gap-4 mb-8">
-        <Link href={`/instruments/${id}`} className="p-2 rounded-lg hover:bg-accent transition-colors">
+        <Link href={instrumentDetailHref(id)} className="p-2 rounded-lg hover:bg-accent transition-colors">
           <ArrowLeft size={20} />
         </Link>
         <h1 className="text-2xl font-bold">Nouveau réglage</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="space-y-6">
         <div className="card space-y-4">
           <div className="form-group">
             <label>Date de saisie</label>

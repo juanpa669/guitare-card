@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { createInstrument } from '@/lib/storage';
+import { handleFormKeyDown } from '@/lib/form';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { InstrumentType, Diapason, Radius } from '@/types';
@@ -87,7 +88,7 @@ export default function NewInstrumentPage() {
         <h1 className="text-2xl font-bold">Nouvel instrument</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="space-y-6">
         <div className="card space-y-4">
           <div className="form-group">
             <label>Type d&apos;instrument</label>

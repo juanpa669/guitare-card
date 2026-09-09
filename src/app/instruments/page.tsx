@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getInstruments } from '@/lib/storage';
+import { instrumentDetailHref } from '@/lib/nav';
 import Link from 'next/link';
 import type { Instrument } from '@/types';
 import { Guitar, Plus, ArrowLeft } from 'lucide-react';
@@ -43,7 +44,7 @@ export default function InstrumentsPage() {
           {instruments.map(inst => (
             <Link
               key={inst.id}
-              href={`/instruments/${inst.id}`}
+              href={instrumentDetailHref(inst.id)}
               className="card block hover:border-primary transition-colors"
             >
               <div className="flex items-center gap-3">

@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { getInstrument, getObservation, getMeasureOriginal, getReglages, deleteInstrument } from '@/lib/storage';
+import { useInstrumentId } from '@/hooks/useInstrumentId';
+import { instrumentEditHref, instrumentMeasuresHref, instrumentObservationsHref, instrumentReglagesHref } from '@/lib/nav';
 import Link from 'next/link';
 import type { Instrument, Observation, MeasureOriginal, Reglage, ReglageString } from '@/types';
 import { ArrowLeft, Pencil, Trash2, Music, ClipboardList, Ruler, Settings, History } from 'lucide-react';
@@ -11,9 +13,8 @@ import { formatRadius } from '@/lib/constants';
 type Tab = 'identification' | 'observations' | 'measures' | 'reglages';
 
 export default function InstrumentDetailPage() {
-  const params = useParams();
   const router = useRouter();
-  const id = params.id as string;
+  const id = useInstrumentId();
 
   const [instrument, setInstrument] = useState<Instrument | null>(null);
   const [observation, setObservation] = useState<Observation | null>(null);
@@ -92,7 +93,7 @@ export default function InstrumentDetailPage() {
       </div>
 
       {activeTab === 'identification' && (
-        <Link href={`/instruments/${id}/edit`} className="card block">
+        <Link href={instrumentEditHref(id)} className="card block">
           <div className="space-y-4">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Type</span>
@@ -152,7 +153,7 @@ export default function InstrumentDetailPage() {
         ) : (
           <div className="text-center py-8">
             <p className="text-muted-foreground mb-4">Aucune observation</p>
-            <Link href={`/instruments/${id}/observations`} className="btn-primary">Ajouter</Link>
+            <Link href={instrumentObservationsHref(id)} className="btn-primary">Ajouter</Link>
           </div>
         )
       )}
@@ -190,14 +191,14 @@ export default function InstrumentDetailPage() {
                 </div>
               </div>
             )}
-            <Link href={`/instruments/${id}/measures`} className="btn-primary w-full block text-center">
+            <Link href={instrumentMeasuresHref(id)} className="btn-primary w-full block text-center">
               Ajouter des mesures
             </Link>
           </div>
         ) : (
           <div className="text-center py-8">
             <p className="text-muted-foreground mb-4">Aucune mesure</p>
-            <Link href={`/instruments/${id}/measures`} className="btn-primary">Premières mesures</Link>
+            <Link href={instrumentMeasuresHref(id)} className="btn-primary">Premières mesures</Link>
           </div>
         )
       )}
@@ -249,7 +250,7 @@ export default function InstrumentDetailPage() {
               <p className="text-muted-foreground mb-4">Aucun réglage</p>
             </div>
           )}
-          <Link href={`/instruments/${id}/reglages`} className="btn-primary w-full block text-center">
+          <Link href={instrumentReglagesHref(id)} className="btn-primary w-full block text-center">
             Nouveau réglage
           </Link>
         </div>

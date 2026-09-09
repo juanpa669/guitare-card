@@ -5,7 +5,10 @@ import { useEffect } from 'react';
 export function PWAProvider() {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      // Désactiver les SW existants (cache)
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
+      }).catch(() => {});
     }
   }, []);
 
