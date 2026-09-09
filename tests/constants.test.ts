@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import {
   formatRadius,
-  getPickupPresets,
   getStringsForCount,
   getCustomBrands,
   addCustomBrand,
@@ -49,38 +48,6 @@ describe('formatRadius', () => {
   })
 })
 
-describe('getPickupPresets', () => {
-  it('should return Fender presets', () => {
-    const presets = getPickupPresets('Fender')
-    expect(presets).toHaveLength(5)
-    expect(presets[0].brand).toBe('Fender')
-    expect(presets[0].position).toBe('Neck')
-  })
-
-  it('should return Music Man presets', () => {
-    const presets = getPickupPresets('Music Man')
-    expect(presets).toHaveLength(3)
-    expect(presets[0].position).toBe('Neck')
-    expect(presets[1].position).toBe('Middle')
-    expect(presets[2].position).toBe('Bridge')
-  })
-
-  it('should return Yamaha presets', () => {
-    const presets = getPickupPresets('Yamaha')
-    expect(presets).toHaveLength(2)
-  })
-
-  it('should return DiMarzio presets', () => {
-    const presets = getPickupPresets('DiMarzio')
-    expect(presets).toHaveLength(1)
-    expect(presets[0].position).toBe('Bridge (Humbucker)')
-  })
-
-  it('should return empty array for unknown brand', () => {
-    const presets = getPickupPresets('Unknown')
-    expect(presets).toHaveLength(0)
-  })
-})
 
 describe('getStringsForCount', () => {
   describe('Guitar', () => {
@@ -248,3 +215,5 @@ describe('Static exports', () => {
     expect(PICKUP_BRANDS).toContain('DiMarzio')
   })
 })
+
+

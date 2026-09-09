@@ -86,8 +86,10 @@ export interface Reglage {
   instrumentId: string;
   dateSaisie: string;
   courbureManche: number;
-  action12frette: number;
-  radiusChevalet: number;
+  action12fretteBass: number;
+  action12fretteTreble: number;
+  radiusChevalet: string;
+  radiusChevaletAutre: string | null;
   intonation: string;
   microBrand: string | null;
   micros: ReglageMicro[];

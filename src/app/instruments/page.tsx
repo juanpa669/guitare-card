@@ -6,8 +6,11 @@ import { instrumentDetailHref } from '@/lib/nav';
 import Link from 'next/link';
 import type { Instrument } from '@/types';
 import { Guitar, Plus, ArrowLeft } from 'lucide-react';
+import { useI18n } from '@/i18n';
+import { instrumentTypeLabel } from '@/lib/i18n-labels';
 
 export default function InstrumentsPage() {
+  const { t } = useI18n();
   const [instruments, setInstruments] = useState<Instrument[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,22 +24,25 @@ export default function InstrumentsPage() {
         <Link href="/" className="p-2 rounded-lg hover:bg-accent transition-colors">
           <ArrowLeft size={20} />
         </Link>
-        <h1 className="text-2xl font-bold">Instruments</h1>
+        <h1 className="text-2xl font-bold">{t('instruments.title')}</h1>
         <div className="flex-1" />
-        <Link href="/instruments/new" className="btn-primary flex items-center gap-2">
-          <Plus size={16} />
-          <span>Nouveau</span>
+        <Link
+          href="/instruments/new"
+          aria-label={t('instruments.addAria')}
+          className="rounded-full w-12 h-12 flex items-center justify-center shrink-0 bg-primary text-primary-foreground shadow-lg hover:opacity-90 active:scale-95 transition-transform"
+        >
+          <Plus size={24} />
         </Link>
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground text-center py-12">Chargement...</p>
+        <p className="text-muted-foreground text-center py-12">{t('common.loading')}</p>
       ) : instruments.length === 0 ? (
         <div className="text-center py-12">
           <Guitar size={48} className="mx-auto mb-4 opacity-30" />
-          <p className="text-muted-foreground mb-4">Aucun instrument enregistré</p>
+          <p className="text-muted-foreground mb-4">{t('instruments.empty')}</p>
           <Link href="/instruments/new" className="btn-primary">
-            Créer un instrument
+            {t('instruments.createCta')}
           </Link>
         </div>
       ) : (
@@ -54,7 +60,7 @@ export default function InstrumentsPage() {
                     {inst.marque} {inst.modele}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {inst.type === 'guitar' ? 'Guitare' : inst.type === 'bass' ? 'Basse' : 'Ukulélé'}
+                    {instrumentTypeLabel(t, inst.type)}
                     {inst.surnom ? ` — ${inst.surnom}` : ''}
                   </p>
                 </div>

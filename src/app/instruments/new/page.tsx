@@ -7,30 +7,33 @@ import { handleFormKeyDown } from '@/lib/form';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { InstrumentType, Diapason, Radius } from '@/types';
-import { getStringsForCount, STRING_COUNTS_GUITAR, STRING_COUNTS_BASS, STRING_COUNTS_UKULELE, MICRO_COUNTS, getAllBrands, addCustomBrand } from '@/lib/constants';
+import { STRING_COUNTS_GUITAR, STRING_COUNTS_BASS, STRING_COUNTS_UKULELE, MICRO_COUNTS, getAllBrands, addCustomBrand } from '@/lib/constants';
+import { useI18n } from '@/i18n';
+import { radiusDisplayLabel } from '@/lib/i18n-labels';
 
-const DIAPASONS: { value: number; label: string; unit: string; range: string }[] = [
-  { value: 596, label: 'Fender Jaguar/Jazzmaster', unit: 'mm', range: '23.46"' },
-  { value: 609, label: 'Fender Duo-Sonic', unit: 'mm', range: '24.0"' },
-  { value: 628, label: 'Court', unit: 'mm', range: '24.5–24.75"' },
-  { value: 643, label: 'Moyen', unit: 'mm', range: '25–25.5"' },
-  { value: 650, label: 'Long', unit: 'mm', range: '25.5"+' },
-  { value: 635, label: 'PRS/National', unit: 'mm', range: '25.0"' },
-  { value: 702, label: 'Baritone', unit: 'mm', range: '27.6"' },
+const DIAPASONS: { value: number; labelKey: string; unit: string; range: string }[] = [
+  { value: 596, labelKey: 'newForm.diapason.jaguar', unit: 'mm', range: '23.46"' },
+  { value: 609, labelKey: 'newForm.diapason.duosonic', unit: 'mm', range: '24.0"' },
+  { value: 628, labelKey: 'newForm.diapason.short', unit: 'mm', range: '24.5–24.75"' },
+  { value: 643, labelKey: 'newForm.diapason.medium', unit: 'mm', range: '25–25.5"' },
+  { value: 650, labelKey: 'newForm.diapason.long', unit: 'mm', range: '25.5"+' },
+  { value: 635, labelKey: 'newForm.diapason.prs', unit: 'mm', range: '25.0"' },
+  { value: 702, labelKey: 'newForm.diapason.baritone', unit: 'mm', range: '27.6"' },
 ];
 
-const RADII: { value: Radius; label: string }[] = [
-  { value: 'r7_5', label: '7.5"' },
-  { value: 'r9_5', label: '9.5"' },
-  { value: 'r10', label: '10"' },
-  { value: 'r12', label: '12"' },
-  { value: 'r14', label: '14"' },
-  { value: 'r16', label: '16"' },
-  { value: 'compound', label: 'Composé' },
+const RADII: { value: Radius }[] = [
+  { value: 'r7_5' },
+  { value: 'r9_5' },
+  { value: 'r10' },
+  { value: 'r12' },
+  { value: 'r14' },
+  { value: 'r16' },
+  { value: 'compound' },
 ];
 
 export default function NewInstrumentPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState({
     type: 'guitar' as InstrumentType,
@@ -65,7 +68,7 @@ export default function NewInstrumentPage() {
           marque: finalBrand.trim(),
           modele: form.modele.trim(),
           surnom: form.surnom.trim() || null,
-          diapason: { value: diapason.value, unit: 'mm', label: diapason.label },
+          diapason: { value: diapason.value, unit: 'mm', label: t(diapason.labelKey) },
           radius: form.radius,
           nombreCordes: form.nombreCordes,
           nombreMicros: form.nombreMicros,
@@ -74,7 +77,7 @@ export default function NewInstrumentPage() {
         router.push('/instruments');
       } catch (err) {
         console.error('Failed to create instrument:', err);
-        alert('Erreur lors de la sauvegarde: ' + (err as Error).message);
+        alert(t('common.error.save', { message: (err as Error).message }));
       }
     });
   };
@@ -82,34 +85,34 @@ export default function NewInstrumentPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-center gap-4 mb-8">
-        <Link href="/instruments" className="p-2 rounded-lg hover:bg-accent transition-colors">
+        <Link href="/instruments" className="p-2 rounded-lg hover:bg-accent transition-colors" aria-label={t('common.back')}>
           <ArrowLeft size={20} />
         </Link>
-        <h1 className="text-2xl font-bold">Nouvel instrument</h1>
+        <h1 className="text-2xl font-bold">{t('newForm.title')}</h1>
       </div>
 
       <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="space-y-6">
         <div className="card space-y-4">
           <div className="form-group">
-            <label>Type d&apos;instrument</label>
+            <label>{t('newForm.typeLabel')}</label>
             <select
               value={form.type}
               onChange={e => setForm(f => ({ ...f, type: e.target.value as InstrumentType }))}
             >
-              <option value="guitar">Guitare</option>
-              <option value="bass">Basse</option>
-              <option value="ukulele">Ukulélé</option>
+              <option value="guitar">{t('type.guitar')}</option>
+              <option value="bass">{t('type.bass')}</option>
+              <option value="ukulele">{t('type.ukulele')}</option>
             </select>
           </div>
 
           <div className="form-group">
-            <label>Marque</label>
+            <label>{t('newForm.brandLabel')}</label>
             <select
               value={selectedBrand}
               onChange={e => setSelectedBrand(e.target.value)}
               required
             >
-              <option value="">Sélectionner une marque</option>
+              <option value="">{t('common.selectBrand')}</option>
               {getAllBrands().map(brand => (
                 <option key={brand} value={brand}>{brand}</option>
               ))}
@@ -118,90 +121,90 @@ export default function NewInstrumentPage() {
 
           {isCustomBrand && (
             <div className="form-group">
-              <label>Marque personnalisée</label>
+              <label>{t('newForm.customBrandLabel')}</label>
               <input
                 type="text"
                 value={form.marqueCustom}
                 onChange={e => setForm(f => ({ ...f, marqueCustom: e.target.value }))}
-                placeholder="Nom de la marque..."
+                placeholder={t('newForm.brandPlaceholder')}
               />
             </div>
           )}
 
           <div className="form-group">
-            <label>Modèle</label>
+            <label>{t('newForm.modelLabel')}</label>
             <input
               type="text"
               value={form.modele}
               onChange={e => setForm(f => ({ ...f, modele: e.target.value }))}
               required
-              placeholder="Stratocaster, SG..."
+              placeholder={t('newForm.modelPlaceholder')}
             />
           </div>
 
           <div className="form-group">
-            <label>Surnom <span className="text-muted-foreground font-normal">(facultatif)</span></label>
+            <label>{t('newForm.nicknameLabel')} <span className="text-muted-foreground font-normal">({t('common.optional')})</span></label>
             <input
               type="text"
               value={form.surnom}
               onChange={e => setForm(f => ({ ...f, surnom: e.target.value }))}
-              placeholder="Ma vieille strat..."
+              placeholder={t('newForm.nicknamePlaceholder')}
             />
           </div>
 
           <div className="form-group">
-            <label>Nombre de cordes</label>
+            <label>{t('newForm.stringCountLabel')}</label>
             <select
               value={form.nombreCordes}
               onChange={e => setForm(f => ({ ...f, nombreCordes: Number(e.target.value) }))}
             >
               {(form.type === 'bass' ? STRING_COUNTS_BASS : form.type === 'ukulele' ? STRING_COUNTS_UKULELE : STRING_COUNTS_GUITAR).map(s => (
-                <option key={s.value} value={s.value}>{s.label}</option>
+                <option key={s.value} value={s.value}>{t(s.labelKey)}</option>
               ))}
             </select>
           </div>
 
           <div className="form-group">
-            <label>Nombre de micros</label>
+            <label>{t('newForm.micCountLabel')}</label>
             <select
               value={form.nombreMicros}
               onChange={e => setForm(f => ({ ...f, nombreMicros: Number(e.target.value) }))}
             >
               {MICRO_COUNTS.map(m => (
-                <option key={m.value} value={m.value}>{m.label}</option>
+                <option key={m.value} value={m.value}>{t(m.labelKey)}</option>
               ))}
             </select>
           </div>
 
           <div className="form-group">
-            <label>Diapason</label>
+            <label>{t('newForm.diapasonLabel')}</label>
             <select
               value={form.diapasonValue}
               onChange={e => setForm(f => ({ ...f, diapasonValue: Number(e.target.value) }))}
             >
               {DIAPASONS.map(d => (
                 <option key={d.value} value={d.value}>
-                  {d.label} — {d.value} {d.unit} ({d.range})
+                  {t(d.labelKey)} — {d.value} {d.unit} ({d.range})
                 </option>
               ))}
             </select>
           </div>
 
           <div className="form-group">
-            <label>Radius touche</label>
+            <label>{t('newForm.radiusLabel')}</label>
             <select
               value={form.radius}
               onChange={e => setForm(f => ({ ...f, radius: e.target.value as Radius }))}
             >
               {RADII.map(r => (
-                <option key={r.value} value={r.value}>{r.label}</option>
+                <option key={r.value} value={r.value}>{radiusDisplayLabel(t, r.value)}</option>
               ))}
             </select>
           </div>
         </div>
 
         <button type="submit" disabled={isPending} className="btn-primary w-full">
-          {isPending ? 'Création...' : 'Créer l\'instrument'}
+          {isPending ? t('newForm.creating') : t('newForm.submit')}
         </button>
       </form>
     </div>

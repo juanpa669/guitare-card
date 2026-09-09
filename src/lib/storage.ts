@@ -13,11 +13,14 @@ function loadAll(): Record<string, any[]> {
 function saveAll(data: Record<string, any[]>) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    window.dispatchEvent(new Event(DATA_CHANGED_EVENT));
   } catch (e) {
     console.error('localStorage save failed:', e);
     throw e;
   }
 }
+
+export const DATA_CHANGED_EVENT = 'guitar-card:data-changed';
 
 function genId(): string {
   return Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
@@ -122,14 +125,29 @@ export async function createOrUpdateObservation(data: any): Promise<any> {
   return record;
 }
 
-export async function getMeasureOriginal(instrumentId: string): Promise<any | null> {
+async function loadMeasureSessions(instrumentId: string): Promise<any[]> {
   const dataStore = loadAll();
-  const items = (dataStore.measures || []).filter((m: any) => m.instrumentId === instrumentId);
-  const measure = items.sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt))[0];
-  if (!measure) return null;
-  const micros = (dataStore.measureMicros || []).filter((m: any) => m.mesureOriginaleId === measure.id);
-  const tests = (dataStore.tests || []).filter((t: any) => t.mesureOriginaleId === measure.id);
-  return { ...measure, micros: micros.sort((a: any, b: any) => a.position.localeCompare(b.position)), test: tests[0] };
+  const raw = (dataStore.measures || [])
+    .filter((m: any) => m.instrumentId === instrumentId)
+    .map((m: any, idx: number) => ({ m, idx }))
+    .sort((a: any, b: any) => (b.m.createdAt || '').localeCompare(a.m.createdAt || '') || b.idx - a.idx)
+    .map((e: any) => e.m);
+  return raw.map(measure => {
+    const micros = (dataStore.measureMicros || [])
+      .filter((m: any) => m.mesureOriginaleId === measure.id)
+      .sort((a: any, b: any) => a.position.localeCompare(b.position));
+    const test = (dataStore.tests || []).find((t: any) => t.mesureOriginaleId === measure.id) ?? null;
+    return { ...measure, micros, test };
+  });
+}
+
+export async function getMeasures(instrumentId: string): Promise<any[]> {
+  return loadMeasureSessions(instrumentId);
+}
+
+export async function getMeasureOriginal(instrumentId: string): Promise<any | null> {
+  const sessions = await loadMeasureSessions(instrumentId);
+  return sessions[0] ?? null;
 }
 
 export async function createMeasureOriginal(data: any, micros: any[]): Promise<any> {
@@ -159,8 +177,16 @@ export async function createTestAfterMeasure(data: any): Promise<any> {
 
 export async function getReglages(instrumentId: string): Promise<any[]> {
   const dataStore = loadAll();
-  const items = (dataStore.regolages || []).filter((r: any) => r.instrumentId === instrumentId);
-  return items.sort((a: any, b: any) => a.ordre - b.ordre);
+  const items = (dataStore.regolages || [])
+    .filter((r: any) => r.instrumentId === instrumentId)
+    .sort((a: any, b: any) => a.ordre - b.ordre);
+  return items.map((r: any) => ({
+    ...r,
+    action12fretteBass: r.action12fretteBass ?? r.action12frette ?? null,
+    action12fretteTreble: r.action12fretteTreble ?? r.action12frette ?? null,
+    radiusChevalet: r.radiusChevalet != null ? String(r.radiusChevalet) : null,
+    radiusChevaletAutre: r.radiusChevaletAutre ?? null,
+  }));
 }
 
 export async function createReglage(data: any, micros: any[], cordes: any[]): Promise<any> {

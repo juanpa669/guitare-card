@@ -94,65 +94,30 @@ export type GuitarBrand = typeof GUITAR_BRANDS[number];
 export type PickupBrand = typeof PICKUP_BRANDS[number];
 export type StringLabel = typeof STRING_LABELS_GUITAR[number];
 
-export interface PickupPreset {
-  brand: string;
-  position: string;
-  bass: number;
-  treble: number;
-  method: string;
-}
-
-export const PICKUP_PRESETS: PickupPreset[] = [
-  // Fender
-  { brand: 'Fender', position: 'Neck', bass: 2.0, treble: 1.6, method: 'Last fret pressed' },
-  { brand: 'Fender', position: 'Neck (Vintage)', bass: 2.4, treble: 2.0, method: 'Last fret pressed' },
-  { brand: 'Fender', position: 'Neck (Texas Special)', bass: 3.6, treble: 2.4, method: 'Last fret pressed' },
-  { brand: 'Fender', position: 'Neck (Noiseless)', bass: 3.6, treble: 2.4, method: 'Last fret pressed' },
-  { brand: 'Fender', position: 'Bridge (Humbucker)', bass: 1.6, treble: 1.6, method: 'Last fret pressed' },
-  // Music Man
-  { brand: 'Music Man', position: 'Neck', bass: 6.5, treble: 4.75, method: 'Strings open' },
-  { brand: 'Music Man', position: 'Middle', bass: 5.5, treble: 4.0, method: 'Strings open' },
-  { brand: 'Music Man', position: 'Bridge', bass: 4.75, treble: 3.25, method: 'Strings open' },
-  { brand: 'Music Man St. Vincent', position: 'Neck', bass: 4.75, treble: 0, method: 'Strings open' },
-  { brand: 'Music Man St. Vincent', position: 'Middle', bass: 4.0, treble: 0, method: 'Strings open' },
-  { brand: 'Music Man St. Vincent', position: 'Bridge', bass: 3.2, treble: 0, method: 'Strings open' },
-  { brand: 'Music Man Axis Super Sport', position: 'Neck', bass: 4.8, treble: 0, method: 'Last fret pressed' },
-  { brand: 'Music Man Axis Super Sport', position: 'Bridge', bass: 3.2, treble: 0, method: 'Last fret pressed' },
-  // Yamaha
-  { brand: 'Yamaha', position: 'Neck', bass: 2.0, treble: 1.5, method: 'Last fret pressed' },
-  { brand: 'Yamaha', position: 'Bridge', bass: 2.5, treble: 1.5, method: 'Last fret pressed' },
-  // DiMarzio
-  { brand: 'DiMarzio', position: 'Bridge (Humbucker)', bass: 2.0, treble: 1.5, method: 'Last fret pressed' },
-];
-
-export function getPickupPresets(brand: string): PickupPreset[] {
-  return PICKUP_PRESETS.filter(p => p.brand === brand);
-}
-
 import type { InstrumentType } from '@/types';
 
 export const STRING_COUNTS_GUITAR = [
-  { value: 6, label: '6 cordes (Standard)' },
-  { value: 7, label: '7 cordes' },
-  { value: 8, label: '8 cordes' },
-  { value: 12, label: '12 cordes' },
+  { value: 6, labelKey: 'strCount.g6' },
+  { value: 7, labelKey: 'strCount.g7' },
+  { value: 8, labelKey: 'strCount.g8' },
+  { value: 12, labelKey: 'strCount.g12' },
 ];
 
 export const STRING_COUNTS_BASS = [
-  { value: 4, label: '4 cordes (Standard)' },
-  { value: 5, label: '5 cordes' },
-  { value: 6, label: '6 cordes' },
+  { value: 4, labelKey: 'strCount.b4' },
+  { value: 5, labelKey: 'strCount.b5' },
+  { value: 6, labelKey: 'strCount.b6' },
 ];
 
 export const STRING_COUNTS_UKULELE = [
-  { value: 4, label: '4 cordes' },
+  { value: 4, labelKey: 'strCount.u4' },
 ];
 
 export const MICRO_COUNTS = [
-  { value: 0, label: '0 micro' },
-  { value: 1, label: '1 micro' },
-  { value: 2, label: '2 micros' },
-  { value: 3, label: '3 micros' },
+  { value: 0, labelKey: 'micCount.zero' },
+  { value: 1, labelKey: 'micCount.one' },
+  { value: 2, labelKey: 'micCount.two' },
+  { value: 3, labelKey: 'micCount.three' },
 ];
 
 export function formatRadius(radius: string): string {

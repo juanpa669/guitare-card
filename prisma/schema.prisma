@@ -84,8 +84,10 @@ model Reglage {
   instrumentId       String
   dateSaisie         String
   courbureManche     Float
-  action12frette     Float
-  radiusChevalet     Float
+  action12fretteBass Float
+  action12fretteTreble Float
+  radiusChevalet     String
+  radiusChevaletAutre String?
   intonation         String
   microBrand         String?
   ordre              Int

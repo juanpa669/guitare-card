@@ -2,72 +2,58 @@
 
 import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createReglage, getMeasureOriginal, getInstrument } from '@/lib/storage';
+import { createReglage, getInstrument } from '@/lib/storage';
 import { useInstrumentId } from '@/hooks/useInstrumentId';
 import { instrumentDetailHref } from '@/lib/nav';
 import { handleFormKeyDown } from '@/lib/form';
-import { ArrowLeft, Plus, X, Info } from 'lucide-react';
+import { ArrowLeft, Info } from 'lucide-react';
 import Link from 'next/link';
 import type { MicrophonePosition } from '@/types';
-import { PICKUP_BRANDS, getPickupPresets, getStringsForCount, PICKUP_PRESETS, type PickupPreset } from '@/lib/constants';
-import type { InstrumentType } from '@/types';
+import { PICKUP_BRANDS, getStringsForCount, STRING_LABELS_GUITAR } from '@/lib/constants';
+import { useI18n } from '@/i18n';
+import { pickupPositionLabel } from '@/lib/i18n-labels';
 
-const FIELD_TOOLTIPS: Record<string, string> = {
-  actionSillet: 'Mesurer la hauteur des cordes au sillet (1ère frette) avec des cales. Viser 0.3-0.5mm pour E grave et 0.2-0.3mm pour E aigu.',
-  courbureManche: 'Relief du manche : mesurer à la 12e frette - Fender (radius 9.5"– 12") : 0,25 mm (0,010"). Radius 7,25" : 0,30 mm (0,012"). Général : 0,2–0,5 mm. Ces valeurs sont des références — le réglage final dépend du tirant des cordes et du style de jeu.',
-  action12frette: 'Action 12e frette (sommet frette → face inférieure corde, guitare accordée). Classique : 3 mm aigu / 4 mm grave. Électrique : 1,2–1,6 mm aigu / 2,0 mm grave. Acoustique acier : 2,0–2,4 mm aigu / 2,5–2,8 mm grave. Action basse : ~2,5 mm aigu / 3,4 mm grave. Action haute : 3,5 mm aigu / 5,5 mm grave. Valeurs indicatives — ajuster selon style de jeu et tirant.',
-  radiusChevalet: 'Ajuster le rayon des pontets pour correspondre au rayon de la touche.',
-  intonation: 'Vérifier l\'intonation corde par corde. La note à la 12ème frette doit être identique à l\'octave supérieure (corde à vide).',
+const RADIUS_STATES = [
+  { value: 'ok', key: 'rc.ok' },
+  { value: 'ko', key: 'rc.ko' },
+  { value: 'paufiner', key: 'rc.paufiner' },
+  { value: 'autre', key: 'rc.autre' },
+];
+
+const TOOLTIPS: Record<string, string> = {
+  actionSillet: 'tooltip.actionSillet',
+  courbureManche: 'tooltip.courbureManche',
+  action12frette: 'tooltip.action12frette',
+  radiusChevalet: 'tooltip.radiusChevalet',
+  intonation: 'tooltip.intonation',
 };
 
 export default function ReglagesPage() {
   const id = useInstrumentId();
   const router = useRouter();
+  const { t } = useI18n();
 
   const [isPending, startTransition] = useTransition();
   const [numMics, setNumMics] = useState(2);
   const [instrument, setInstrument] = useState<any>(null);
-  const [instrumentType, setInstrumentType] = useState<InstrumentType>('guitar');
   const [form, setForm] = useState({
     courbureManche: '',
-    action12frette: '',
-    radiusChevalet: '',
+    action12fretteBass: '',
+    action12fretteTreble: '',
+    radiusChevalet: 'ok',
+    radiusChevaletAutre: '',
     intonation: '',
     dateSaisie: new Date().toISOString().split('T')[0],
   });
   const [micros, setMicros] = useState<{ hauteur: string; microBrand: string; microBrandCustom: string }[]>([]);
-  const [microBrand, setMicroBrand] = useState('');
-  const [microBrandCustom, setMicroBrandCustom] = useState('');
   const [cordes, setCordes] = useState<{ hauteur: string; stringNum: number; stringLabel: string }[]>([]);
-  const [showPresets, setShowPresets] = useState(false);
-  const [presets, setPresets] = useState<PickupPreset[]>([]);
-  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
-
-  const isCustomBrand = microBrand === 'Autres';
-  const finalBrand = isCustomBrand ? microBrandCustom : microBrand;
 
   useEffect(() => {
     getInstrument(id).then(inst => {
-      if (inst) {
-        setInstrument(inst);
-        setInstrumentType(inst.type);
-      }
+      if (inst) setInstrument(inst);
     });
   }, [id]);
-
-  useEffect(() => {
-    if (finalBrand && !isCustomBrand) {
-      const found = PICKUP_PRESETS.find(p => p.brand === finalBrand);
-      if (found) {
-        setPresets(getPickupPresets(finalBrand));
-      } else {
-        setPresets([]);
-      }
-    } else {
-      setPresets([]);
-    }
-  }, [finalBrand, isCustomBrand]);
 
   useEffect(() => {
     if (instrument?.nombreCordes) {
@@ -78,14 +64,11 @@ export default function ReglagesPage() {
         stringLabel: s.label,
       })));
     } else {
-      setCordes([
-        { hauteur: '', stringNum: 1, stringLabel: 'Mi grave' },
-        { hauteur: '', stringNum: 2, stringLabel: 'Si' },
-        { hauteur: '', stringNum: 3, stringLabel: 'Sol' },
-        { hauteur: '', stringNum: 4, stringLabel: 'Ré' },
-        { hauteur: '', stringNum: 5, stringLabel: 'La' },
-        { hauteur: '', stringNum: 6, stringLabel: 'Mi aigu' },
-      ]);
+      setCordes(STRING_LABELS_GUITAR.slice(0, 6).map((label, i) => ({
+        hauteur: '',
+        stringNum: i + 1,
+        stringLabel: label,
+      })));
     }
   }, [instrument]);
 
@@ -102,9 +85,11 @@ export default function ReglagesPage() {
   const positions: MicrophonePosition[] = numMics === 1 ? ['neck'] : numMics === 2 ? ['neck', 'bridge'] : numMics === 3 ? ['neck', 'middle', 'bridge'] : [];
 
   const updateMicro = (idx: number, field: string, value: string) => {
-    const newMicros = [...micros];
-    newMicros[idx] = { ...newMicros[idx], [field]: value };
-    setMicros(newMicros);
+    setMicros(prev => {
+      const newMicros = [...prev];
+      newMicros[idx] = { ...newMicros[idx], [field]: value };
+      return newMicros;
+    });
   };
 
   const updateCorde = (idx: number, value: string) => {
@@ -113,98 +98,85 @@ export default function ReglagesPage() {
     setCordes(newCordes);
   };
 
-  const applyPreset = (preset: PickupPreset) => {
-    const posIndex = positions.findIndex(p => {
-      const presetPos = preset.position.toLowerCase();
-      if (preset.position.includes('Neck') || presetPos.includes('neck')) return p === 'neck';
-      if (preset.position.includes('Middle') || presetPos.includes('middle')) return p === 'middle';
-      if (preset.position.includes('Bridge') || presetPos.includes('bridge')) return p === 'bridge';
-      return false;
-    });
-
-    if (posIndex >= 0) {
-      const newMicros = [...micros];
-      newMicros[posIndex] = { ...newMicros[posIndex], hauteur: preset.bass.toString() };
-      setMicros(newMicros);
-      setSelectedPreset(preset.position);
-    }
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.courbureManche || !form.action12frette) return;
+    if (!form.courbureManche || form.action12fretteBass === '' || form.action12fretteTreble === '') return;
 
     const mandatoryCordes = cordes.filter(c =>
       c.stringLabel.includes('grave') || c.stringLabel.includes('aigu')
     );
     const hasEmptyMandatory = mandatoryCordes.some(c => !c.hauteur);
     if (hasEmptyMandatory) {
-      setErrorMsg('E grave et E aigu sont obligatoires');
+      setErrorMsg(t('reglagesForm.mandatoryStrings'));
       return;
     }
     setErrorMsg('');
 
     startTransition(async () => {
-      await createReglage({
-        instrumentId: id,
-        dateSaisie: form.dateSaisie,
-        courbureManche: parseFloat(form.courbureManche),
-        action12frette: parseFloat(form.action12frette),
-        radiusChevalet: parseFloat(form.radiusChevalet) || 0,
-        intonation: form.intonation,
-        microBrand: finalBrand || null,
-        ordre: 0,
-      }, positions.map((pos, i) => {
-        const micro = micros[i];
-        let microBrandVal: string | null = null;
-        if (numMics === 1 && microBrand) {
-          microBrandVal = microBrand === 'Autres' ? microBrandCustom || null : microBrand;
-        } else if (micro?.microBrand) {
-          microBrandVal = micro.microBrand === 'Autres' ? micro.microBrandCustom || null : micro.microBrand;
-        }
-        return {
-          position: pos,
-          hauteur: parseFloat(micro?.hauteur || '0'),
-          microBrand: microBrandVal,
-        };
-      }), cordes.map(c => ({
-        stringNum: c.stringNum,
-        stringLabel: c.stringLabel,
-        hauteur: parseFloat(c.hauteur || '0'),
-      })));
-      router.push(instrumentDetailHref(id));
+      try {
+        await createReglage({
+          instrumentId: id,
+          dateSaisie: form.dateSaisie,
+          courbureManche: parseFloat(form.courbureManche),
+          action12fretteBass: parseFloat(form.action12fretteBass),
+          action12fretteTreble: parseFloat(form.action12fretteTreble),
+          radiusChevalet: form.radiusChevalet,
+          radiusChevaletAutre: form.radiusChevalet === 'autre' ? form.radiusChevaletAutre.trim() || null : null,
+          intonation: form.intonation,
+          ordre: 0,
+        }, positions.map((pos, i) => {
+          const micro = micros[i];
+          return {
+            position: pos,
+            hauteur: parseFloat(micro?.hauteur || '0'),
+            microBrand: micro?.microBrand
+              ? micro.microBrand === 'Autres'
+                ? micro.microBrandCustom || null
+                : micro.microBrand
+              : null,
+          };
+        }), cordes.map(c => ({
+          stringNum: c.stringNum,
+          stringLabel: c.stringLabel,
+          hauteur: parseFloat(c.hauteur || '0'),
+        })));
+        router.push(instrumentDetailHref(id));
+      } catch (err) {
+        console.error('Failed to save reglage:', err);
+        alert(t('common.error.save', { message: (err as Error).message }));
+      }
     });
   };
 
-  const selectedStringCount = instrument?.nombreCordes || cordes.length;
+  const renderTooltip = (key: string) => (
+    <span className="tooltip-trigger group relative" tabIndex={0} role="button" aria-label={t('common.info')}>
+      <Info size={14} className="text-muted-foreground" />
+      <span className="tooltip-text">{t(TOOLTIPS[key])}</span>
+    </span>
+  );
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-center gap-4 mb-8">
-        <Link href={instrumentDetailHref(id)} className="p-2 rounded-lg hover:bg-accent transition-colors">
+        <Link href={instrumentDetailHref(id)} className="p-2 rounded-lg hover:bg-accent transition-colors" aria-label={t('common.back')}>
           <ArrowLeft size={20} />
         </Link>
-        <h1 className="text-2xl font-bold">Nouveau réglage</h1>
+        <h1 className="text-2xl font-bold">{t('reglagesForm.title')}</h1>
       </div>
 
       <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="space-y-6">
         <div className="card space-y-4">
           <div className="form-group">
-            <label>Date de saisie</label>
+            <label>{t('reglagesForm.entryDate')}</label>
             <input type="date" value={form.dateSaisie} onChange={e => setForm(f => ({ ...f, dateSaisie: e.target.value }))} />
           </div>
 
           <div className="form-group">
             <div className="flex items-center gap-2">
-              <label>Action au sillet par corde</label>
-              <span className="tooltip-trigger group relative" tabIndex={0} role="button" aria-label="Info">
-                <Info size={14} className="text-muted-foreground" />
-                <span className="tooltip-text">
-                  {FIELD_TOOLTIPS.actionSillet}
-                </span>
-              </span>
+              <label>{t('reglagesForm.nutAction')}</label>
+              {renderTooltip('actionSillet')}
             </div>
-            <p className="text-xs text-muted-foreground mb-2">E grave et E aigu obligatoires</p>
+            <p className="text-xs text-muted-foreground mb-2">{t('reglagesForm.mandatoryHint')}</p>
             {errorMsg && <p className="text-xs text-destructive mb-2">{errorMsg}</p>}
             <div className="space-y-2">
               {cordes.map((corde, idx) => {
@@ -232,191 +204,126 @@ export default function ReglagesPage() {
 
           <div className="form-group">
             <div className="flex items-center gap-2">
-              <label>Courbure du manche (mm)</label>
-              <span className="tooltip-trigger group relative" tabIndex={0} role="button" aria-label="Info">
-                <Info size={14} className="text-muted-foreground" />
-                <span className="tooltip-text">
-                  {FIELD_TOOLTIPS.courbureManche}
-                </span>
-              </span>
+              <label>{t('reglagesForm.reliefLabel')}</label>
+              {renderTooltip('courbureManche')}
             </div>
             <input type="number" step="0.01" value={form.courbureManche} onChange={e => setForm(f => ({ ...f, courbureManche: e.target.value }))} />
           </div>
 
           <div className="form-group">
             <div className="flex items-center gap-2">
-              <label>Action 12ème frette (mm)</label>
-              <span className="tooltip-trigger group relative" tabIndex={0} role="button" aria-label="Info">
-                <Info size={14} className="text-muted-foreground" />
-                <span className="tooltip-text">
-                  {FIELD_TOOLTIPS.action12frette}
-                </span>
-              </span>
+              <label>{t('reglagesForm.action12Label')}</label>
+              {renderTooltip('action12frette')}
             </div>
-            <input type="number" step="0.1" value={form.action12frette} onChange={e => setForm(f => ({ ...f, action12frette: e.target.value }))} />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="form-group">
+                <label>{t('common.grave')}</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={form.action12fretteBass}
+                  onChange={e => setForm(f => ({ ...f, action12fretteBass: e.target.value }))}
+                />
+              </div>
+              <div className="form-group">
+                <label>{t('common.aigu')}</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={form.action12fretteTreble}
+                  onChange={e => setForm(f => ({ ...f, action12fretteTreble: e.target.value }))}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="form-group">
             <div className="flex items-center gap-2">
-              <label>Radius cordes au chevalet (pouces)</label>
-              <span className="tooltip-trigger group relative" tabIndex={0} role="button" aria-label="Info">
-                <Info size={14} className="text-muted-foreground" />
-                <span className="tooltip-text">
-                  {FIELD_TOOLTIPS.radiusChevalet}
-                </span>
-              </span>
+              <label>{t('reglagesForm.radiusChevalet')}</label>
+              {renderTooltip('radiusChevalet')}
             </div>
-            <input type="number" step="0.1" value={form.radiusChevalet} onChange={e => setForm(f => ({ ...f, radiusChevalet: e.target.value }))} />
-          </div>
-
-          <div className="form-group">
-            <div className="flex items-center gap-2">
-              <label>Intonation</label>
-              <span className="tooltip-trigger group relative" tabIndex={0} role="button" aria-label="Info">
-                <Info size={14} className="text-muted-foreground" />
-                <span className="tooltip-text">
-                  {FIELD_TOOLTIPS.intonation}
-                </span>
-              </span>
-            </div>
-            <input type="text" value={form.intonation} onChange={e => setForm(f => ({ ...f, intonation: e.target.value }))} placeholder="Notes ou remarques..." />
-          </div>
-
-          <div className="form-group">
-            <label>Marque du micro</label>
             <select
-              value={microBrand}
-              onChange={e => {
-                setMicroBrand(e.target.value);
-                setMicroBrandCustom('');
-                setSelectedPreset(null);
-              }}
+              value={form.radiusChevalet}
+              onChange={e => setForm(f => ({ ...f, radiusChevalet: e.target.value }))}
             >
-              <option value="">Sélectionner une marque</option>
-              {PICKUP_BRANDS.map(brand => (
-                <option key={brand} value={brand}>{brand}</option>
+              {RADIUS_STATES.map(state => (
+                <option key={state.value} value={state.value}>{t(state.key)}</option>
               ))}
             </select>
           </div>
 
-          {isCustomBrand && (
+          {form.radiusChevalet === 'autre' && (
             <div className="form-group">
-              <label>Marque personnalisée</label>
+              <label>{t('common.specify')}</label>
               <input
                 type="text"
-                value={microBrandCustom}
-                onChange={e => setMicroBrandCustom(e.target.value)}
-                placeholder="Nom du fabricant..."
+                value={form.radiusChevaletAutre}
+                onChange={e => setForm(f => ({ ...f, radiusChevaletAutre: e.target.value }))}
+                placeholder={t('reglagesForm.radiusChevaletPlaceholder')}
               />
             </div>
           )}
 
-          {presets.length > 0 && (
-            <div className="card p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="font-medium">Préréglages {finalBrand}</p>
-                <button
-                  type="button"
-                  onClick={() => setShowPresets(!showPresets)}
-                  className="text-sm text-primary hover:underline"
-                >
-                  {showPresets ? 'Masquer' : 'Afficher'}
-                </button>
-              </div>
-
-              {showPresets && presets.map((preset, idx) => (
-                <div key={idx} className="border border-border rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-sm">{preset.position}</span>
-                    <button
-                      type="button"
-                      onClick={() => applyPreset(preset)}
-                      className="text-xs text-primary hover:underline"
-                    >
-                      Appliquer
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                    <span>Grave: {preset.bass} mm</span>
-                    <span>Aigu: {preset.treble > 0 ? `${preset.treble} mm` : '-'}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{preset.method}</p>
-                </div>
-              ))}
+          <div className="form-group">
+            <div className="flex items-center gap-2">
+              <label>{t('reglagesForm.intonation')}</label>
+              {renderTooltip('intonation')}
             </div>
-          )}
+            <input type="text" value={form.intonation} onChange={e => setForm(f => ({ ...f, intonation: e.target.value }))} placeholder={t('reglagesForm.intonationPlaceholder')} />
+          </div>
 
           <div className="form-group">
-            <label>Nombre de micros</label>
+            <label>{t('measForm.micCount')}</label>
             <select
               value={numMics}
               onChange={e => {
                 setNumMics(Number(e.target.value));
                 setMicros(Array(Number(e.target.value)).fill({ hauteur: '', microBrand: '', microBrandCustom: '' }));
-                setSelectedPreset(null);
               }}
             >
-              <option value="1">1 micro</option>
-              <option value="2">2 micros</option>
-              <option value="3">3 micros</option>
+              <option value="1">{t('measForm.mics.one')}</option>
+              <option value="2">{t('measForm.mics.two')}</option>
+              <option value="3">{t('measForm.mics.three')}</option>
             </select>
           </div>
 
           {positions.map((pos, i) => {
-            const posLabel = pos === 'neck' ? 'Neck' : pos === 'middle' ? 'Middle' : 'Bridge';
             const posIndex = positions.indexOf(pos);
             const micro = micros[posIndex] || { hauteur: '', microBrand: '', microBrandCustom: '' };
             const isCustomMicroBrand = micro.microBrand === 'Autres';
-            const showPerPositionBrand = numMics > 1 || !microBrand;
-            const effectiveMicroBrand = showPerPositionBrand ? micro.microBrand : microBrand;
-            const effectiveMicroBrandCustom = showPerPositionBrand ? micro.microBrandCustom : microBrandCustom;
-            const isCustomEffective = effectiveMicroBrand === 'Autres';
             return (
               <div key={pos} className="card p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium">{posLabel}</p>
-                  {selectedPreset && selectedPreset.toLowerCase().includes(pos) && (
-                    <span className="text-xs text-primary">✓ Préréglé</span>
-                  )}
+                <p className="font-medium mb-2">{pickupPositionLabel(t, pos)}</p>
+                <div className="form-group">
+                  <label>{t('reglagesForm.microBrand')}</label>
+                  <select
+                    value={micro.microBrand}
+                    onChange={e => {
+                      updateMicro(posIndex, 'microBrand', e.target.value);
+                      if (e.target.value !== 'Autres') {
+                        updateMicro(posIndex, 'microBrandCustom', '');
+                      }
+                    }}
+                  >
+                    <option value="">{t('common.selectOption')}</option>
+                    {PICKUP_BRANDS.map(brand => (
+                      <option key={brand} value={brand}>{brand}</option>
+                    ))}
+                  </select>
                 </div>
-                {showPerPositionBrand && (
+                {isCustomMicroBrand && (
                   <div className="form-group">
-                    <label>Marque du micro</label>
-                    <select
-                      value={micro.microBrand}
-                      onChange={e => {
-                        updateMicro(posIndex, 'microBrand', e.target.value);
-                        if (e.target.value !== 'Autres') {
-                          updateMicro(posIndex, 'microBrandCustom', '');
-                        }
-                      }}
-                    >
-                      <option value="">Sélectionner</option>
-                      {PICKUP_BRANDS.map(brand => (
-                        <option key={brand} value={brand}>{brand}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                {isCustomEffective && (
-                  <div className="form-group">
-                    <label>Marque personnalisée</label>
+                    <label>{t('reglagesForm.customBrand')}</label>
                     <input
                       type="text"
-                      value={effectiveMicroBrandCustom}
-                      onChange={e => {
-                        if (showPerPositionBrand) {
-                          updateMicro(posIndex, 'microBrandCustom', e.target.value);
-                        } else {
-                          setMicroBrandCustom(e.target.value);
-                        }
-                      }}
-                      placeholder="Nom du fabricant..."
+                      value={micro.microBrandCustom}
+                      onChange={e => updateMicro(posIndex, 'microBrandCustom', e.target.value)}
+                      placeholder={t('reglagesForm.customBrandPlaceholder')}
                     />
                   </div>
                 )}
                 <div className="form-group">
-                  <label>Hauteur (mm)</label>
+                  <label>{t('reglagesForm.height')}</label>
                   <input
                     type="number"
                     step="0.1"
@@ -431,7 +338,7 @@ export default function ReglagesPage() {
         </div>
 
         <button type="submit" disabled={isPending} className="btn-primary w-full">
-          {isPending ? 'Enregistrement...' : 'Enregistrer le réglage'}
+          {isPending ? t('reglagesForm.saving') : t('reglagesForm.submit')}
         </button>
       </form>
     </div>

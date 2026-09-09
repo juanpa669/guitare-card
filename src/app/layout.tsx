@@ -2,14 +2,17 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/hooks/useTheme';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { PWAProvider } from '@/components/PWAProvider';
+import { I18nProvider } from '@/i18n';
+import fr from '@/i18n/fr';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Guitar Card',
-  description: 'Fiche de suivi réglages Guitare/Basse',
+  description: fr['meta.description'],
   manifest: '/manifest.json',
   themeColor: '#6366f1',
   viewport: {
@@ -63,15 +66,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={inter.className}>
         <ThemeProvider>
-          <PWAProvider />
-          <div className="min-h-screen flex flex-col">
-            <header className="flex justify-end p-4">
-              <ThemeToggle />
-            </header>
-            <main className="flex-1">
-              {children}
-            </main>
-          </div>
+          <I18nProvider>
+            <PWAProvider />
+            <div className="min-h-screen flex flex-col">
+              <header className="flex justify-end items-center gap-2 p-4">
+                <LanguageSwitch />
+                <ThemeToggle />
+              </header>
+              <main className="flex-1">
+                {children}
+              </main>
+            </div>
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

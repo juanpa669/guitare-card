@@ -258,6 +258,30 @@ describe('createReglage', () => {
   })
 })
 
+describe('getReglages legacy fields', () => {
+  beforeEach(async () => {
+    await clearAll()
+  })
+
+  it('normalizes old single-action and numeric-radius reglages on read', async () => {
+    await createReglage({ instrumentId: 'legacy-1', dateSaisie: '2024-01-01', courbureManche: 0.5, action12frette: 2, radiusChevalet: 12, intonation: 'ok' }, [], [])
+    const reglages = await getReglages('legacy-1')
+    expect(reglages).toHaveLength(1)
+    expect(reglages[0].action12fretteBass).toBe(2)
+    expect(reglages[0].action12fretteTreble).toBe(2)
+    expect(reglages[0].radiusChevalet).toBe('12')
+    expect(reglages[0].radiusChevaletAutre).toBeNull()
+  })
+
+  it('keeps new-format fields untouched', async () => {
+    await createReglage({ instrumentId: 'new-1', dateSaisie: '2024-01-01', courbureManche: 0.5, action12fretteBass: 1.8, action12fretteTreble: 1.4, radiusChevalet: 'ok', radiusChevaletAutre: null, intonation: 'ok' }, [], [])
+    const reglages = await getReglages('new-1')
+    expect(reglages[0].action12fretteBass).toBe(1.8)
+    expect(reglages[0].action12fretteTreble).toBe(1.4)
+    expect(reglages[0].radiusChevalet).toBe('ok')
+  })
+})
+
 describe('clearAll', () => {
   beforeEach(async () => {
     await clearAll()
