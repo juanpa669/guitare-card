@@ -42,3 +42,11 @@ next-env.d.ts
 
 # playwright-cli
 .playwright-cli/
+android/keystore/
+
+# Android release signing
+keystore.properties
+android/keystore/
+
+# Android release signing
+android/keystore/
