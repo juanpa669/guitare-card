@@ -50,3 +50,6 @@ android/keystore/
 
 # Android release signing
 android/keystore/
+
+# Android Studio / IntelliJ
+.idea/
