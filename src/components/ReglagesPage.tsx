@@ -6,18 +6,28 @@ import { createReglage, getInstrument } from '@/lib/storage';
 import { useInstrumentId } from '@/hooks/useInstrumentId';
 import { instrumentDetailHref } from '@/lib/nav';
 import { handleFormKeyDown } from '@/lib/form';
+import { TEXT_INPUT_PROPS } from '@/lib/inputProps';
 import { ArrowLeft, Info } from 'lucide-react';
 import Link from 'next/link';
 import type { MicrophonePosition } from '@/types';
-import { PICKUP_BRANDS, getStringsForCount, STRING_LABELS_GUITAR } from '@/lib/constants';
+import { getAllPickupBrands, addCustomBrand, MICRO_COUNTS, getStringsForCount, STRING_LABELS_GUITAR } from '@/lib/constants';
+import { getMicrophonePositions } from '@/lib/microphones';
 import { useI18n } from '@/i18n';
 import { pickupPositionLabel } from '@/lib/i18n-labels';
+import MicPositionSelect from './MicPositionSelect';
 
 const RADIUS_STATES = [
   { value: 'ok', key: 'rc.ok' },
   { value: 'ko', key: 'rc.ko' },
   { value: 'paufiner', key: 'rc.paufiner' },
   { value: 'autre', key: 'rc.autre' },
+];
+
+const INTONATION_STATES = [
+  { value: 'ok', key: 'intonation.ok' },
+  { value: 'ko', key: 'intonation.ko' },
+  { value: 'regler', key: 'intonation.regler' },
+  { value: 'paufiner', key: 'intonation.paufiner' },
 ];
 
 const TOOLTIPS: Record<string, string> = {
@@ -35,54 +45,48 @@ export default function ReglagesPage() {
 
   const [isPending, startTransition] = useTransition();
   const [numMics, setNumMics] = useState(2);
-  const [instrument, setInstrument] = useState<any>(null);
+  const [singlePos, setSinglePos] = useState<MicrophonePosition>('neck');
   const [form, setForm] = useState({
     courbureManche: '',
     action12fretteBass: '',
     action12fretteTreble: '',
     radiusChevalet: 'ok',
     radiusChevaletAutre: '',
-    intonation: '',
+    intonation: 'ok',
     dateSaisie: new Date().toISOString().split('T')[0],
   });
-  const [micros, setMicros] = useState<{ hauteur: string; microBrand: string; microBrandCustom: string }[]>([]);
+  const [micros, setMicros] = useState<{ hauteurBass: string; hauteurTreble: string; microBrand: string; microBrandCustom: string }[]>([]);
+  const [pickupBrands, setPickupBrands] = useState<string[]>(() => getAllPickupBrands());
   const [cordes, setCordes] = useState<{ hauteur: string; stringNum: number; stringLabel: string }[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     getInstrument(id).then(inst => {
-      if (inst) setInstrument(inst);
-    });
-  }, [id]);
-
-  useEffect(() => {
-    if (instrument?.nombreCordes) {
-      const strings = getStringsForCount(instrument.nombreCordes, instrument.type);
+      const strings = inst?.nombreCordes
+        ? getStringsForCount(inst.nombreCordes, inst.type)
+        : STRING_LABELS_GUITAR.slice(0, 6).map(label => ({ label, shortLabel: label }));
       setCordes(strings.map((s, i) => ({
         hauteur: '',
         stringNum: i + 1,
         stringLabel: s.label,
       })));
-    } else {
-      setCordes(STRING_LABELS_GUITAR.slice(0, 6).map((label, i) => ({
-        hauteur: '',
-        stringNum: i + 1,
-        stringLabel: label,
-      })));
-    }
-  }, [instrument]);
 
-  useEffect(() => {
-    if (instrument?.nombreMicros) {
-      setNumMics(instrument.nombreMicros);
-      setMicros(Array(instrument.nombreMicros).fill({ hauteur: '', microBrand: '', microBrandCustom: '' }));
-    } else {
-      setNumMics(2);
-      setMicros(Array(2).fill({ hauteur: '', microBrand: '', microBrandCustom: '' }));
-    }
-  }, [instrument]);
+      const count = inst?.nombreMicros ?? 2;
+      setNumMics(count);
+      setMicros(Array(count).fill({ hauteurBass: '', hauteurTreble: '', microBrand: '', microBrandCustom: '' }));
+      setLoaded(true);
+    });
+  }, [id]);
 
-  const positions: MicrophonePosition[] = numMics === 1 ? ['neck'] : numMics === 2 ? ['neck', 'bridge'] : numMics === 3 ? ['neck', 'middle', 'bridge'] : [];
+  const positions = getMicrophonePositions(numMics, singlePos);
+
+  const registerCustomBrand = (value: string) => {
+    const name = value.trim();
+    if (!name) return;
+    addCustomBrand(name);
+    setPickupBrands(getAllPickupBrands());
+  };
 
   const updateMicro = (idx: number, field: string, value: string) => {
     setMicros(prev => {
@@ -114,6 +118,10 @@ export default function ReglagesPage() {
 
     startTransition(async () => {
       try {
+        micros
+          .filter(m => m.microBrand === 'Autres' && m.microBrandCustom.trim())
+          .forEach(m => addCustomBrand(m.microBrandCustom.trim()));
+
         await createReglage({
           instrumentId: id,
           dateSaisie: form.dateSaisie,
@@ -128,7 +136,8 @@ export default function ReglagesPage() {
           const micro = micros[i];
           return {
             position: pos,
-            hauteur: parseFloat(micro?.hauteur || '0'),
+            hauteurBass: parseFloat(micro?.hauteurBass || '0'),
+            hauteurTreble: parseFloat(micro?.hauteurTreble || '0'),
             microBrand: micro?.microBrand
               ? micro.microBrand === 'Autres'
                 ? micro.microBrandCustom || null
@@ -154,6 +163,10 @@ export default function ReglagesPage() {
       <span className="tooltip-text">{t(TOOLTIPS[key])}</span>
     </span>
   );
+
+  if (!loaded) {
+    return <div className="text-center py-12">{t('common.loading')}</div>;
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -257,6 +270,7 @@ export default function ReglagesPage() {
               <label>{t('common.specify')}</label>
               <input
                 type="text"
+                {...TEXT_INPUT_PROPS}
                 value={form.radiusChevaletAutre}
                 onChange={e => setForm(f => ({ ...f, radiusChevaletAutre: e.target.value }))}
                 placeholder={t('reglagesForm.radiusChevaletPlaceholder')}
@@ -269,7 +283,14 @@ export default function ReglagesPage() {
               <label>{t('reglagesForm.intonation')}</label>
               {renderTooltip('intonation')}
             </div>
-            <input type="text" value={form.intonation} onChange={e => setForm(f => ({ ...f, intonation: e.target.value }))} placeholder={t('reglagesForm.intonationPlaceholder')} />
+            <select
+              value={form.intonation}
+              onChange={e => setForm(f => ({ ...f, intonation: e.target.value }))}
+            >
+              {INTONATION_STATES.map(state => (
+                <option key={state.value} value={state.value}>{t(state.key)}</option>
+              ))}
+            </select>
           </div>
 
           <div className="form-group">
@@ -277,23 +298,28 @@ export default function ReglagesPage() {
             <select
               value={numMics}
               onChange={e => {
-                setNumMics(Number(e.target.value));
-                setMicros(Array(Number(e.target.value)).fill({ hauteur: '', microBrand: '', microBrandCustom: '' }));
+                const count = Number(e.target.value);
+                setNumMics(count);
+                setMicros(Array(count).fill({ hauteurBass: '', hauteurTreble: '', microBrand: '', microBrandCustom: '' }));
               }}
             >
-              <option value="1">{t('measForm.mics.one')}</option>
-              <option value="2">{t('measForm.mics.two')}</option>
-              <option value="3">{t('measForm.mics.three')}</option>
+              {MICRO_COUNTS.map(m => (
+                <option key={m.value} value={m.value}>{t(m.labelKey)}</option>
+              ))}
             </select>
           </div>
 
           {positions.map((pos, i) => {
             const posIndex = positions.indexOf(pos);
-            const micro = micros[posIndex] || { hauteur: '', microBrand: '', microBrandCustom: '' };
+            const micro = micros[posIndex] || { hauteurBass: '', hauteurTreble: '', microBrand: '', microBrandCustom: '' };
             const isCustomMicroBrand = micro.microBrand === 'Autres';
             return (
-              <div key={pos} className="card p-4">
-                <p className="font-medium mb-2">{pickupPositionLabel(t, pos)}</p>
+              <div key={i} className="card p-4">
+                {numMics === 1 ? (
+                  <MicPositionSelect value={pos} onChange={setSinglePos} />
+                ) : (
+                  <p className="font-medium mb-2">{pickupPositionLabel(t, pos)}</p>
+                )}
                 <div className="form-group">
                   <label>{t('reglagesForm.microBrand')}</label>
                   <select
@@ -306,7 +332,7 @@ export default function ReglagesPage() {
                     }}
                   >
                     <option value="">{t('common.selectOption')}</option>
-                    {PICKUP_BRANDS.map(brand => (
+                    {pickupBrands.map(brand => (
                       <option key={brand} value={brand}>{brand}</option>
                     ))}
                   </select>
@@ -316,21 +342,35 @@ export default function ReglagesPage() {
                     <label>{t('reglagesForm.customBrand')}</label>
                     <input
                       type="text"
+                      {...TEXT_INPUT_PROPS}
                       value={micro.microBrandCustom}
                       onChange={e => updateMicro(posIndex, 'microBrandCustom', e.target.value)}
+                      onBlur={e => registerCustomBrand(e.target.value)}
                       placeholder={t('reglagesForm.customBrandPlaceholder')}
                     />
                   </div>
                 )}
-                <div className="form-group">
-                  <label>{t('reglagesForm.height')}</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    placeholder="0.0"
-                    value={micro.hauteur}
-                    onChange={e => updateMicro(posIndex, 'hauteur', e.target.value)}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="form-group">
+                    <label>{t('measForm.sideGrave')} mm</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      placeholder="0.0"
+                      value={micro.hauteurBass}
+                      onChange={e => updateMicro(posIndex, 'hauteurBass', e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>{t('measForm.sideAigu')} mm</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      placeholder="0.0"
+                      value={micro.hauteurTreble}
+                      onChange={e => updateMicro(posIndex, 'hauteurTreble', e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
             );

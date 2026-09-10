@@ -37,11 +37,20 @@ export function addCustomBrand(name: string): void {
 }
 
 export function getAllBrands(): string[] {
-  return [...STATIC_GUITAR_BRANDS, ...getCustomBrands()];
+  return sortBrandsWithAutresLast([...STATIC_GUITAR_BRANDS, ...getCustomBrands()]);
 }
 
 export function getAllPickupBrands(): string[] {
-  return [...STATIC_PICKUP_BRANDS, ...getCustomBrands()];
+  return sortBrandsWithAutresLast([...STATIC_PICKUP_BRANDS, ...getCustomBrands()]);
+}
+
+const AUTRES_BRAND = 'Autres';
+
+function sortBrandsWithAutresLast(brands: string[]): string[] {
+  const sorted = Array.from(new Set(brands))
+    .filter(brand => brand !== AUTRES_BRAND)
+    .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+  return [...sorted, AUTRES_BRAND];
 }
 
 export const STRING_LABELS_GUITAR = [

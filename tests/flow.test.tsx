@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, act } from '@testing-library/react'
+import { render, screen, within, fireEvent, act } from '@testing-library/react'
 import InstrumentDetailPage from '@/components/InstrumentDetailPage'
 import type { Instrument } from '@/types'
 import { getInstrument, getObservation, getMeasures, getReglages } from '@/lib/storage'
@@ -41,6 +41,8 @@ const observationFixture = {
   etatCordes: 'Neuves',
   etatFrettes: 'ras',
   frettesAutre: null,
+  elementsDevisses: null,
+  piecesManquantes: null,
   sillet: 'ok',
   silletAutre: null,
   controles: '',
@@ -95,6 +97,38 @@ describe('instrument flow (query-param navigation)', () => {
     expect(document.querySelector('a[href="/instrument/observations?id=inst-1"]')).not.toBeNull()
   })
 
+  it('lists the optional observation fields as bullet points, one per comma item', async () => {
+    vi.mocked(getObservation).mockResolvedValueOnce({
+      ...observationFixture,
+      elementsDevisses: 'pick guard, mécaniques',
+      piecesManquantes: 'vis',
+    } as never)
+    render(<InstrumentDetailPage />)
+    await screen.findByText('Fender Stratocaster')
+    await settle()
+    fireEvent.click(screen.getByRole('button', { name: /observations/i }))
+    await settle()
+
+    expect(screen.getByText('Éléments dévissés')).toBeInTheDocument()
+    expect(screen.getByText('Pick guard')).toBeInTheDocument()
+    expect(screen.getByText('Mécaniques')).toBeInTheDocument()
+    expect(screen.getByText('Pièces manquantes')).toBeInTheDocument()
+    expect(screen.getByText('Vis')).toBeInTheDocument()
+    expect(document.querySelectorAll('ul li')).toHaveLength(3)
+  })
+
+  it('hides the optional observation fields when they are empty', async () => {
+    vi.mocked(getObservation).mockResolvedValueOnce(observationFixture as never)
+    render(<InstrumentDetailPage />)
+    await screen.findByText('Fender Stratocaster')
+    await settle()
+    fireEvent.click(screen.getByRole('button', { name: /observations/i }))
+    await settle()
+    expect(screen.queryByText('Éléments dévissés')).toBeNull()
+    expect(screen.queryByText('Pièces manquantes')).toBeNull()
+    expect(document.querySelectorAll('ul li')).toHaveLength(0)
+  })
+
   it('lists measure sessions with dates, tags and a working sort toggle', async () => {
     vi.mocked(getMeasures).mockResolvedValueOnce([
       { id: 'm3', dateMesure: '2026-09-09', createdAt: '2026-09-09T14:00:00', actionBass12: 1, actionTreble12: 1, courbureManche10: 0.2, formePontet: 'radius', micros: [], test: null },
@@ -115,5 +149,41 @@ describe('instrument flow (query-param navigation)', () => {
     await settle()
     expect(screen.getByText('Dernières mesures')).toBeInTheDocument()
     expect(screen.getByText('Premières mesures')).toBeInTheDocument()
+  })
+
+  it('renders the reglages tab with the same clean layout as measures', async () => {
+    vi.mocked(getReglages).mockResolvedValueOnce([
+      {
+        id: 'r1', instrumentId: 'inst-1', dateSaisie: '2026-09-09', courbureManche: 0.25,
+        action12fretteBass: 2, action12fretteTreble: 1.5, radiusChevalet: 'ok',
+        radiusChevaletAutre: null, intonation: 'regler', microBrand: null, ordre: 1,
+        cordes: [{ id: 'c1', reglageId: 'r1', stringNum: 1, stringLabel: 'Mi grave', hauteur: 0.3 }],
+        micros: [{ id: 'mi1', reglageId: 'r1', position: 'neck', hauteurBass: 1.2, hauteurTreble: 0.9, microBrand: 'EMG' }],
+      },
+    ] as never)
+    render(<InstrumentDetailPage />)
+    await screen.findByText('Fender Stratocaster')
+    await settle()
+    fireEvent.click(screen.getByRole('button', { name: 'Réglages' }))
+    await settle()
+
+    expect(screen.getByText('Réglage 1')).toBeInTheDocument()
+    expect(screen.getByText('09 Sept. 2026')).toBeInTheDocument()
+    expect(screen.getByText('À régler')).toBeInTheDocument()
+    expect(screen.getByText('Mi grave')).toBeInTheDocument()
+
+    const card = screen.getByText('Réglage 1').closest('.card') as HTMLElement
+    expect(within(card).getByText('Courbure manche')).toBeInTheDocument()
+    expect(within(card).getByText('0.25 mm')).toBeInTheDocument()
+    expect(within(card).getByText('Action 12e (grave)')).toBeInTheDocument()
+    expect(within(card).getByText('2 mm')).toBeInTheDocument()
+    expect(within(card).getByText('Action 12e (aigu)')).toBeInTheDocument()
+    expect(within(card).getByText('1.5 mm')).toBeInTheDocument()
+    expect(within(card).getByText('Intonation')).toBeInTheDocument()
+    expect(within(card).getByText('À régler')).toBeInTheDocument()
+    expect(within(card).getByText(/Neck/)).toBeInTheDocument()
+    expect(within(card).getByText('Grave 1.2 mm · Aigu 0.9 mm')).toBeInTheDocument()
+    expect(within(card).getByText('Mi grave')).toBeInTheDocument()
+    expect(within(card).getByText('0.3 mm')).toBeInTheDocument()
   })
 })

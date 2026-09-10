@@ -186,6 +186,14 @@ export async function getReglages(instrumentId: string): Promise<any[]> {
     action12fretteTreble: r.action12fretteTreble ?? r.action12frette ?? null,
     radiusChevalet: r.radiusChevalet != null ? String(r.radiusChevalet) : null,
     radiusChevaletAutre: r.radiusChevaletAutre ?? null,
+    micros: (dataStore.reglageMicros || [])
+      .filter((m: any) => m.reglageId === r.id)
+      .map((m: any) => ({
+        ...m,
+        hauteurBass: m.hauteurBass ?? m.hauteur ?? null,
+        hauteurTreble: m.hauteurTreble ?? m.hauteur ?? null,
+      })),
+    cordes: (dataStore.reglageStrings || []).filter((c: any) => c.reglageId === r.id),
   }));
 }
 

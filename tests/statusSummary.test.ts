@@ -40,14 +40,14 @@ describe('buildStatusSummary', () => {
     const summary = buildStatusSummary(
       [
         { action12fretteBass: 2, action12fretteTreble: 1.5, courbureManche: 0.3, micros: [] },
-        { action12fretteBass: 1.8, action12fretteTreble: 1.4, courbureManche: 0.25, micros: [{ position: 'bridge', hauteur: 2.8 }, { position: 'neck', hauteur: 3.2 }] },
+        { action12fretteBass: 1.8, action12fretteTreble: 1.4, courbureManche: 0.25, micros: [{ position: 'bridge', hauteurBass: 2.8, hauteurTreble: 2.6 }, { position: 'neck', hauteurBass: 3.2, hauteurTreble: 3.0 }] },
       ],
       null,
     )
     expect(summary?.basis).toBe('reglage')
     expect(summary?.action).toBe('1,8 / 1,4')
     expect(summary?.courbure).toBe('0,25')
-    expect(summary?.micros.map(m => `${m.label}:${m.value}`)).toEqual(['Neck:3,2', 'Bridge:2,8'])
+    expect(summary?.micros.map(m => `${m.label}:${m.value}`)).toEqual(['Neck:3,2 / 3', 'Bridge:2,8 / 2,6'])
   })
 
   it('falls back to the initial measures without any reglage', () => {

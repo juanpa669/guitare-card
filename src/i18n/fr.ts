@@ -51,6 +51,12 @@ const fr: Dict = {
   'rc.paufiner': 'À peaufiner',
   'rc.autre': 'Autres',
 
+  // intonation states
+  'intonation.ok': 'OK',
+  'intonation.ko': 'KO',
+  'intonation.regler': 'À régler',
+  'intonation.paufiner': 'À peaufiner',
+
   // fields (labels partagées)
   'field.type': 'Type',
   'field.brand': 'Marque',
@@ -66,6 +72,9 @@ const fr: Dict = {
   'field.relief': 'Courbure manche',
   'field.microHeights': 'Hauteur micros',
   'field.radiusChevalet': 'Radius chevalet',
+  'field.intonation': 'Intonation',
+  'field.looseParts': 'Éléments dévissés',
+  'field.missingParts': 'Pièces manquantes',
 
   // states frettes / sillet
   'state.frets.ras': 'RAS',
@@ -164,7 +173,9 @@ const fr: Dict = {
   'obsForm.stringsStatePlaceholder': 'Neuves, usées, rouillées...',
   'obsForm.fretsStateLabel': 'État des frettes',
   'obsForm.loosePartsLabel': 'Éléments dévissés',
+  'obsForm.loosePartsPlaceholder': 'Ex : pick guard, mécaniques (séparer par des virgules)',
   'obsForm.missingPartsLabel': 'Pièces manquantes',
+  'obsForm.missingPartsPlaceholder': 'Ex : vis, capot (séparer par des virgules)',
   'obsForm.saddleLabel': 'Sillet',
   'obsForm.quickChecksLabel': 'Contrôles rapides',
   'obsForm.quickChecksPlaceholder': 'Notes rapides sur l\u2019état général...',
@@ -188,9 +199,7 @@ const fr: Dict = {
   'measForm.vibrations': 'Vibrations parasites',
   'measForm.sound': 'Son',
   'measForm.micCount': 'Nombre de micros',
-  'measForm.mics.one': '1 micro',
-  'measForm.mics.two': '2 micros',
-  'measForm.mics.three': '3 micros',
+  'measForm.micPosition': 'Position du micro',
   'measForm.sideGrave': 'Côté grave',
   'measForm.sideAigu': 'Côté aigu',
   'measForm.seeRecap': 'Voir le récapitulatif',
@@ -213,11 +222,9 @@ const fr: Dict = {
   'reglagesForm.radiusChevalet': 'Radius cordes au chevalet',
   'reglagesForm.radiusChevaletPlaceholder': 'Détail du problème...',
   'reglagesForm.intonation': 'Intonation',
-  'reglagesForm.intonationPlaceholder': 'Notes ou remarques...',
   'reglagesForm.microBrand': 'Marque du micro',
   'reglagesForm.customBrand': 'Marque personnalisée',
   'reglagesForm.customBrandPlaceholder': 'Nom du fabricant...',
-  'reglagesForm.height': 'Hauteur (mm)',
   'reglagesForm.saving': 'Enregistrement...',
   'reglagesForm.submit': 'Enregistrer le réglage',
 

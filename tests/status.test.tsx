@@ -36,8 +36,8 @@ describe('status page summary block', () => {
         courbureManche: 0.25,
         createdAt: '2026-09-09T14:32:00',
         micros: [
-          { position: 'bridge', hauteur: 2.8 },
-          { position: 'neck', hauteur: 3.2 },
+          { position: 'bridge', hauteurBass: 2.8, hauteurTreble: 2.6 },
+          { position: 'neck', hauteurBass: 3.2, hauteurTreble: 3.0 },
         ],
       },
     ] as never)
@@ -47,8 +47,8 @@ describe('status page summary block', () => {
     expect(screen.getByText('Courbure manche')).toBeInTheDocument()
     expect(screen.getByText('0,25 mm')).toBeInTheDocument()
     expect(screen.getByText('Hauteur micros')).toBeInTheDocument()
-    expect(screen.getByText('3,2 mm')).toBeInTheDocument()
-    expect(screen.getByText('2,8 mm')).toBeInTheDocument()
+    expect(screen.getByText('3,2 / 3 mm')).toBeInTheDocument()
+    expect(screen.getByText('2,8 / 2,6 mm')).toBeInTheDocument()
     expect(screen.getByText('09 Sept. 2026 · 14:32')).toBeInTheDocument()
   })
 

@@ -250,11 +250,34 @@ describe('createReglage', () => {
 
   it('should create a reglage with micros and strings', async () => {
     const instrument = await createInstrument({ type: 'guitar', marque: 'Fender', modele: 'Stratocaster', surnom: null, diapason: { value: 650, unit: 'mm', label: '650mm' }, radius: 'r9_5', nombreCordes: 6, nombreMicros: 3, dateCreation: '2024-01-01' })
-    const micros = [{ position: 'neck', hauteur: 4, microBrand: 'Seymour Duncan' }]
+    const micros = [{ position: 'neck', hauteurBass: 4, hauteurTreble: 3, microBrand: 'Seymour Duncan' }]
     const cordes = [{ stringNum: 1, stringLabel: 'Mi aigu', hauteur: 2 }]
     const reglage = await createReglage({ instrumentId: instrument.id, dateSaisie: '2024-01-01', courbureManche: 0.5, action12frette: 2, radiusChevalet: 12, intonation: 'ok' }, micros, cordes)
     expect(reglage.id).toBeDefined()
     expect(reglage.ordre).toBe(1)
+  })
+
+  it('returns the reglage micros and strings joined on read', async () => {
+    const instrument = await createInstrument({ type: 'guitar', marque: 'Fender', modele: 'Stratocaster', surnom: null, diapason: { value: 650, unit: 'mm', label: '650mm' }, radius: 'r9_5', nombreCordes: 6, nombreMicros: 3, dateCreation: '2024-01-01' })
+    await createReglage({ instrumentId: instrument.id, dateSaisie: '2024-01-01', courbureManche: 0.5, action12fretteBass: 2, action12fretteTreble: 1.5, radiusChevalet: 'ok', intonation: 'ok' },
+      [{ position: 'neck', hauteurBass: 4, hauteurTreble: 3, microBrand: 'EMG' }],
+      [{ stringNum: 1, stringLabel: 'Mi aigu', hauteur: 2 }],
+    )
+    const reglages = await getReglages(instrument.id)
+    expect(reglages[0].micros).toHaveLength(1)
+    expect(reglages[0].micros[0]).toMatchObject({ position: 'neck', hauteurBass: 4, hauteurTreble: 3, microBrand: 'EMG' })
+    expect(reglages[0].cordes).toHaveLength(1)
+  })
+
+  it('normalizes legacy single mic-height reglages on read', async () => {
+    const instrument = await createInstrument({ type: 'guitar', marque: 'Fender', modele: 'Stratocaster', surnom: null, diapason: { value: 650, unit: 'mm', label: '650mm' }, radius: 'r9_5', nombreCordes: 6, nombreMicros: 1, dateCreation: '2024-01-01' })
+    await createReglage({ instrumentId: instrument.id, dateSaisie: '2024-01-01', courbureManche: 0.5, action12fretteBass: 2, action12fretteTreble: 1.5, radiusChevalet: 'ok', intonation: 'ok' },
+      [{ position: 'neck', hauteur: 4 }],
+      [],
+    )
+    const reglages = await getReglages(instrument.id)
+    expect(reglages[0].micros[0].hauteurBass).toBe(4)
+    expect(reglages[0].micros[0].hauteurTreble).toBe(4)
   })
 })
 

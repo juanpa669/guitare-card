@@ -27,6 +27,17 @@ export function radiusChevaletLabel(
   return state;
 }
 
+export function intonationLabel(t: TranslateFn, value: string | null | undefined): string {
+  if (!value) return '—';
+  const keys: Record<string, string> = {
+    ok: 'intonation.ok',
+    ko: 'intonation.ko',
+    regler: 'intonation.regler',
+    paufiner: 'intonation.paufiner',
+  };
+  return keys[value] ? t(keys[value]) : value;
+}
+
 function formatRadiusSafe(value: string): string {
   const map: Record<string, string> = {
     r7_5: '7.5"',

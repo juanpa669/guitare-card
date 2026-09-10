@@ -42,20 +42,6 @@ function orderedMicros<T extends { position: string }>(items: T[] | null | undef
   );
 }
 
-function buildSingleMicros(micros: { position: string; hauteur?: number | null }[] | null | undefined): StatusMicro[] {
-  const result: StatusMicro[] = [];
-  for (const m of orderedMicros(micros)) {
-    const value = formatNumber(m.hauteur);
-    if (value === null) continue;
-    result.push({
-      position: m.position as MicrophonePosition,
-      label: POSITION_LABEL[m.position as MicrophonePosition] ?? m.position,
-      value,
-    });
-  }
-  return result;
-}
-
 function buildPairMicros(micros: { position: string; hauteurBass?: number | null; hauteurTreble?: number | null }[] | null | undefined): StatusMicro[] {
   const result: StatusMicro[] = [];
   for (const m of orderedMicros(micros)) {
@@ -76,7 +62,7 @@ type ReglageLike = {
   action12fretteTreble?: number | null;
   courbureManche?: number | null;
   createdAt?: string | null;
-  micros?: { position: string; hauteur?: number | null }[];
+  micros?: { position: string; hauteurBass?: number | null; hauteurTreble?: number | null }[];
 };
 
 type MeasureLike = {
@@ -95,7 +81,7 @@ export function buildStatusSummary(reglages: ReglageLike[] | null | undefined, m
       basis: 'reglage',
       action: formatActionPair(lastReglage.action12fretteBass, lastReglage.action12fretteTreble),
       courbure: formatNumber(lastReglage.courbureManche) ?? '—',
-      micros: buildSingleMicros(lastReglage.micros),
+      micros: buildPairMicros(lastReglage.micros),
       recordedAt: lastReglage.createdAt ?? null,
     };
   }

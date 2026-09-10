@@ -1,15 +1,18 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { createMeasureOriginal, createTestAfterMeasure, getMeasureOriginal } from '@/lib/storage';
+import { createMeasureOriginal, createTestAfterMeasure, getMeasureOriginal, getInstrument } from '@/lib/storage';
 import { useInstrumentId } from '@/hooks/useInstrumentId';
 import { instrumentDetailHref } from '@/lib/nav';
 import { handleFormKeyDown } from '@/lib/form';
 import { ArrowLeft, Check } from 'lucide-react';
 import Link from 'next/link';
 import type { BridgeShape, MicrophonePosition } from '@/types';
+import { MICRO_COUNTS } from '@/lib/constants';
+import { getMicrophonePositions } from '@/lib/microphones';
 import { useI18n } from '@/i18n';
 import { pickupPositionLabel } from '@/lib/i18n-labels';
+import MicPositionSelect from './MicPositionSelect';
 
 export default function MeasuresPage() {
   const id = useInstrumentId();
@@ -18,6 +21,7 @@ export default function MeasuresPage() {
   const [step, setStep] = useState<'form' | 'recap' | 'tests' | 'done'>('form');
   const [isPending, startTransition] = useTransition();
   const [numMics, setNumMics] = useState(2);
+  const [singlePos, setSinglePos] = useState<MicrophonePosition>('neck');
   const [form, setForm] = useState({
     actionBass12: '',
     actionTreble12: '',
@@ -27,12 +31,22 @@ export default function MeasuresPage() {
   const [micros, setMicros] = useState<{ bass: string; treble: string }[]>([]);
   const [tests, setTests] = useState({ frise: false, vibrations: false, son: 'ok' as 'ok' | 'ko' });
   const [hasMeasure, setHasMeasure] = useState<boolean | null>(null);
+  const [instrumentLoaded, setInstrumentLoaded] = useState(false);
 
   useEffect(() => {
     getMeasureOriginal(id).then(measure => setHasMeasure(!!measure));
   }, [id]);
 
-  const positions: MicrophonePosition[] = numMics === 1 ? ['neck'] : numMics === 2 ? ['neck', 'bridge'] : ['neck', 'middle', 'bridge'];
+  useEffect(() => {
+    getInstrument(id).then(inst => {
+      const count = inst?.nombreMicros ?? 2;
+      setNumMics(count);
+      setMicros(Array(count).fill({ bass: '', treble: '' }));
+      setInstrumentLoaded(true);
+    });
+  }, [id]);
+
+  const positions = getMicrophonePositions(numMics, singlePos);
 
   const getMicro = (_pos: MicrophonePosition, idx: number) => micros[idx] || { bass: '', treble: '' };
 
@@ -113,6 +127,10 @@ export default function MeasuresPage() {
     );
   }
 
+  if (!instrumentLoaded) {
+    return <div className="text-center py-12">{t('common.loading')}</div>;
+  }
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-center gap-4 mb-8">
@@ -151,16 +169,27 @@ export default function MeasuresPage() {
 
             <div className="form-group">
               <label>{t('measForm.micCount')}</label>
-              <select value={numMics} onChange={e => { setNumMics(Number(e.target.value)); setMicros(Array(Number(e.target.value)).fill({ bass: '', treble: '' })); }}>
-                <option value="1">{t('measForm.mics.one')}</option>
-                <option value="2">{t('measForm.mics.two')}</option>
-                <option value="3">{t('measForm.mics.three')}</option>
+              <select
+                value={numMics}
+                onChange={e => {
+                  const count = Number(e.target.value);
+                  setNumMics(count);
+                  setMicros(Array(count).fill({ bass: '', treble: '' }));
+                }}
+              >
+                {MICRO_COUNTS.map(m => (
+                  <option key={m.value} value={m.value}>{t(m.labelKey)}</option>
+                ))}
               </select>
             </div>
 
             {positions.map((pos, i) => (
-              <div key={pos} className="card p-4">
-                <p className="font-medium mb-2">{pickupPositionLabel(t, pos)}</p>
+              <div key={i} className="card p-4">
+                {numMics === 1 ? (
+                  <MicPositionSelect value={pos} onChange={setSinglePos} />
+                ) : (
+                  <p className="font-medium mb-2">{pickupPositionLabel(t, pos)}</p>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="form-group">
                     <label>{t('measForm.sideGrave')} mm</label>

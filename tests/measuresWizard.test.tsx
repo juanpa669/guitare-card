@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, act } from '@testing-library/react'
+import { render, screen, within, fireEvent, act } from '@testing-library/react'
 import MeasuresPage from '@/components/MeasuresPage'
 import {
   clearAll,
@@ -23,11 +23,11 @@ const settle = async () => {
   }
 }
 
-async function seedInstrument(): Promise<string> {
+async function seedInstrument(nombreMicros = 2): Promise<string> {
   const inst = await createInstrument({
     type: 'guitar', marque: 'Fender', modele: 'Stratocaster', surnom: null,
     diapason: { value: 648, unit: 'mm', label: 'Moyen' }, radius: 'r9_5',
-    nombreCordes: 6, nombreMicros: 2, dateCreation: '2026-09-09',
+    nombreCordes: 6, nombreMicros, dateCreation: '2026-09-09',
   });
   return inst.id;
 }
@@ -82,5 +82,38 @@ describe('measures wizard saves with the real storage', () => {
     expect(saved.actionTreble12).toBe(1.5)
     expect(saved.courbureManche10).toBe(0.25)
     expect(saved.test).toBeDefined()
+  })
+
+  it('saves the chosen position for a single-mic instrument', async () => {
+    const id = await seedInstrument(1)
+    mockUseSearchParams.mockReturnValue({ get: (key: string) => (key === 'id' ? id : null) })
+
+    render(<MeasuresPage />)
+    expect(await screen.findByText('Premières mesures')).toBeInTheDocument()
+    await settle()
+
+    const positionSelect = screen
+      .getAllByRole('combobox')
+      .find(s => within(s as HTMLElement).queryByText('Middle')) as HTMLSelectElement
+    expect(positionSelect.value).toBe('neck')
+    fireEvent.change(positionSelect, { target: { value: 'bridge' } })
+    await settle()
+
+    const spinbuttons = await screen.findAllByRole('spinbutton')
+    fireEvent.change(spinbuttons[0], { target: { value: '2' } })
+    fireEvent.change(spinbuttons[1], { target: { value: '1.5' } })
+    fireEvent.change(spinbuttons[2], { target: { value: '0.25' } })
+    await settle()
+
+    fireEvent.click(screen.getByText('Voir le récapitulatif'))
+    await settle()
+    fireEvent.click(screen.getByText('Tests'))
+    await settle()
+    fireEvent.click(screen.getByText('Enregistrer'))
+    expect(await screen.findByText('Mesures enregistrées')).toBeInTheDocument()
+
+    const saved = await getMeasureOriginal(id)
+    expect(saved.micros).toHaveLength(1)
+    expect(saved.micros[0].position).toBe('bridge')
   })
 })

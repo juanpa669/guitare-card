@@ -113,7 +113,8 @@ export interface ReglageMicro {
   id: string;
   reglageId: string;
   position: MicrophonePosition;
-  hauteur: number;
+  hauteurBass: number;
+  hauteurTreble: number;
   microBrand: string | null;
   createdAt: Date;
   updatedAt: Date;

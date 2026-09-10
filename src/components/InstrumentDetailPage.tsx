@@ -7,10 +7,11 @@ import { useInstrumentId } from '@/hooks/useInstrumentId';
 import { instrumentEditHref, instrumentMeasuresHref, instrumentObservationsHref, instrumentReglagesHref } from '@/lib/nav';
 import Link from 'next/link';
 import type { Instrument, Observation, Reglage } from '@/types';
-import { ArrowLeft, Pencil, Trash2, ClipboardList, Ruler, Settings, History, ArrowUpDown } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, ClipboardList, Ruler, Settings, ArrowUpDown } from 'lucide-react';
 import { formatFrenchDate, formatTime } from '@/lib/dates';
 import { useI18n } from '@/i18n';
-import { instrumentTypeLabel, pickupPositionLabel, radiusDisplayLabel, radiusChevaletLabel } from '@/lib/i18n-labels';
+import { instrumentTypeLabel, pickupPositionLabel, radiusDisplayLabel, radiusChevaletLabel, intonationLabel } from '@/lib/i18n-labels';
+import { splitList, capitalizeFirst } from '@/lib/text';
 
 type Tab = 'identification' | 'observations' | 'measures' | 'reglages';
 
@@ -80,6 +81,9 @@ export default function InstrumentDetailPage() {
     if (obs.sillet === 'adjust') return t('state.saddle.adjust');
     return obs.silletAutre || t('state.other');
   };
+
+  const looseParts = splitList(observation?.elementsDevisses);
+  const missingParts = splitList(observation?.piecesManquantes);
 
   if (loading) return <div className="text-center py-12">{t('common.loading')}</div>;
   if (!instrument) return <div className="text-center py-12">{t('detail.notFound')}</div>;
@@ -177,6 +181,26 @@ export default function InstrumentDetailPage() {
                 <span className="text-muted-foreground">{t('field.saddle')}</span>
                 <span>{saddleLabel(observation)}</span>
               </div>
+              {looseParts.length > 0 && (
+                <div>
+                  <span className="text-muted-foreground">{t('field.looseParts')}</span>
+                  <ul className="list-disc list-inside mt-1">
+                    {looseParts.map(item => (
+                      <li key={item}>{capitalizeFirst(item)}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {missingParts.length > 0 && (
+                <div>
+                  <span className="text-muted-foreground">{t('field.missingParts')}</span>
+                  <ul className="list-disc list-inside mt-1">
+                    {missingParts.map(item => (
+                      <li key={item}>{capitalizeFirst(item)}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {observation.controles && (
                 <div>
                   <span className="text-muted-foreground">{t('field.quickChecks')}</span>
@@ -259,40 +283,38 @@ export default function InstrumentDetailPage() {
           {reglages.length > 0 ? (
             reglages.map((reg, i) => (
               <div key={reg.id} className="card">
-                <div className="flex items-center gap-2 mb-2">
-                  <History size={16} className="text-muted-foreground" />
-                  <span className="font-medium">{t('detail.reg.num', { n: i + 1 })}</span>
-                  <span className="text-sm text-muted-foreground ml-auto">{formatFrenchDate(reg.dateSaisie) ?? reg.dateSaisie}</span>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium">{formatFrenchDate(reg.dateSaisie) ?? reg.dateSaisie}</span>
+                  <span className="text-xs text-muted-foreground">{t('detail.reg.num', { n: i + 1 })}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                  <div><span className="text-muted-foreground">{t('field.relief')}:</span> {reg.courbureManche} mm</div>
-                  <div><span className="text-muted-foreground">{t('detail.reg.actionBass')}:</span> {reg.action12fretteBass ?? '—'} mm</div>
-                  <div><span className="text-muted-foreground">{t('detail.reg.actionTreble')}:</span> {reg.action12fretteTreble ?? '—'} mm</div>
-                  <div><span className="text-muted-foreground">{t('field.radiusChevalet')}:</span> {radiusChevaletLabel(t, reg.radiusChevalet, reg.radiusChevaletAutre)}</div>
-                  {reg.microBrand && <div><span className="text-muted-foreground">{t('detail.reg.microGlobal')}:</span> {reg.microBrand}</div>}
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t('field.relief')}</span><span>{reg.courbureManche} mm</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t('detail.reg.actionBass')}</span><span>{reg.action12fretteBass ?? '—'} mm</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t('detail.reg.actionTreble')}</span><span>{reg.action12fretteTreble ?? '—'} mm</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t('field.radiusChevalet')}</span><span>{radiusChevaletLabel(t, reg.radiusChevalet, reg.radiusChevaletAutre)}</span></div>
+                  {reg.intonation && <div className="flex justify-between"><span className="text-muted-foreground">{t('field.intonation')}</span><span>{intonationLabel(t, reg.intonation)}</span></div>}
+                  {reg.microBrand && <div className="flex justify-between"><span className="text-muted-foreground">{t('detail.reg.microGlobal')}</span><span>{reg.microBrand}</span></div>}
                 </div>
                 {reg.micros && reg.micros.length > 0 && (
-                  <div className="mb-3">
-                    <p className="text-xs text-muted-foreground mb-1">{t('detail.reg.microsHeader')}:</p>
+                  <div className="mt-2 pt-2 border-t border-border space-y-1 text-sm">
+                    <p className="text-xs text-muted-foreground">{t('detail.reg.microsHeader')}</p>
                     {reg.micros.map(m => (
-                      <div key={m.id} className="text-xs mb-1">
-                        <span className="font-medium">{pickupPositionLabel(t, m.position)}</span>
-                        {m.microBrand && <span className="text-muted-foreground ml-1">({m.microBrand})</span>}
-                        <span className="text-muted-foreground ml-1">{m.hauteur} mm</span>
+                      <div key={m.id} className="flex justify-between pl-3">
+                        <span className="text-muted-foreground">{pickupPositionLabel(t, m.position)}{m.microBrand ? ` (${m.microBrand})` : ''}</span>
+                        <span>{t('detail.micLine', { grave: m.hauteurBass, aigu: m.hauteurTreble })}</span>
                       </div>
                     ))}
                   </div>
                 )}
                 {reg.cordes && reg.cordes.length > 0 && (
-                  <div className="mb-2">
-                    <p className="text-xs text-muted-foreground mb-1">{t('detail.reg.stringsHeader')}:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {reg.cordes.map(c => (
-                        <span key={c.id} className="text-xs bg-accent px-2 py-1 rounded">
-                          {c.stringLabel}: {c.hauteur}mm
-                        </span>
-                      ))}
-                    </div>
+                  <div className="mt-2 pt-2 border-t border-border space-y-1 text-sm">
+                    <p className="text-xs text-muted-foreground">{t('detail.reg.stringsHeader')}</p>
+                    {reg.cordes.map(c => (
+                      <div key={c.id} className="flex justify-between pl-3">
+                        <span className="text-muted-foreground">{c.stringLabel}</span>
+                        <span>{c.hauteur} mm</span>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

@@ -186,6 +186,30 @@ describe('Custom Brands', () => {
     expect(brands).toContain('Seymour Duncan')
     expect(brands).toContain('MyPickup')
   })
+
+  it('sorts pickup brands alphabetically and keeps Autres last', () => {
+    addCustomBrand('Aria Custom')
+    const brands = getAllPickupBrands()
+    expect(brands[brands.length - 1]).toBe('Autres')
+    expect(brands.indexOf('Aria Custom')).toBeGreaterThan(-1)
+    expect(brands.indexOf('Aria Custom')).toBeLessThan(brands.indexOf('Bare Knuckle'))
+    expect(brands.indexOf('DiMarzio')).toBeLessThan(brands.indexOf('Fender'))
+  })
+
+  it('sorts guitar brands alphabetically and keeps Autres last', () => {
+    addCustomBrand('Zeta Custom')
+    const brands = getAllBrands()
+    expect(brands[brands.length - 1]).toBe('Autres')
+    expect(brands.indexOf('Fender')).toBeLessThan(brands.indexOf('Gibson'))
+    expect(brands.indexOf('Zeta Custom')).toBeLessThan(brands.indexOf('Autres'))
+  })
+
+  it('does not duplicate a custom brand that matches a static one', () => {
+    addCustomBrand('Fender')
+    const brands = getAllPickupBrands()
+    expect(brands.filter(b => b === 'Fender')).toHaveLength(1)
+    expect(brands[brands.length - 1]).toBe('Autres')
+  })
 })
 
 describe('Static exports', () => {

@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { createInstrument } from '@/lib/storage';
 import { handleFormKeyDown } from '@/lib/form';
+import { TEXT_INPUT_PROPS } from '@/lib/inputProps';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { InstrumentType, Diapason, Radius } from '@/types';
@@ -124,6 +125,7 @@ export default function NewInstrumentPage() {
               <label>{t('newForm.customBrandLabel')}</label>
               <input
                 type="text"
+                {...TEXT_INPUT_PROPS}
                 value={form.marqueCustom}
                 onChange={e => setForm(f => ({ ...f, marqueCustom: e.target.value }))}
                 placeholder={t('newForm.brandPlaceholder')}
@@ -135,6 +137,7 @@ export default function NewInstrumentPage() {
             <label>{t('newForm.modelLabel')}</label>
             <input
               type="text"
+              {...TEXT_INPUT_PROPS}
               value={form.modele}
               onChange={e => setForm(f => ({ ...f, modele: e.target.value }))}
               required
@@ -146,6 +149,7 @@ export default function NewInstrumentPage() {
             <label>{t('newForm.nicknameLabel')} <span className="text-muted-foreground font-normal">({t('common.optional')})</span></label>
             <input
               type="text"
+              {...TEXT_INPUT_PROPS}
               value={form.surnom}
               onChange={e => setForm(f => ({ ...f, surnom: e.target.value }))}
               placeholder={t('newForm.nicknamePlaceholder')}

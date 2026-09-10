@@ -6,6 +6,7 @@ import { getObservation, createOrUpdateObservation } from '@/lib/storage';
 import { useInstrumentId } from '@/hooks/useInstrumentId';
 import { instrumentDetailHref } from '@/lib/nav';
 import { handleFormKeyDown } from '@/lib/form';
+import { TEXT_INPUT_PROPS } from '@/lib/inputProps';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { FretCondition, SaddleCondition } from '@/types';
@@ -96,7 +97,7 @@ export default function ObservationsPage() {
 
           <div className="form-group">
             <label>{t('obsForm.stringsStateLabel')}</label>
-            <input type="text" value={form.etatCordes} onChange={e => setForm(f => ({ ...f, etatCordes: e.target.value }))} placeholder={t('obsForm.stringsStatePlaceholder')} />
+            <input type="text" {...TEXT_INPUT_PROPS} value={form.etatCordes} onChange={e => setForm(f => ({ ...f, etatCordes: e.target.value }))} placeholder={t('obsForm.stringsStatePlaceholder')} />
           </div>
 
           <div className="form-group">
@@ -112,18 +113,18 @@ export default function ObservationsPage() {
           {form.etatFrettes === 'other' && (
             <div className="form-group">
               <label>{t('common.specify')}</label>
-              <input type="text" value={form.frettesAutre} onChange={e => setForm(f => ({ ...f, frettesAutre: e.target.value }))} />
+              <input type="text" {...TEXT_INPUT_PROPS} value={form.frettesAutre} onChange={e => setForm(f => ({ ...f, frettesAutre: e.target.value }))} />
             </div>
           )}
 
           <div className="form-group">
             <label>{t('obsForm.loosePartsLabel')} <span className="text-muted-foreground font-normal">({t('common.optional')})</span></label>
-            <input type="text" value={form.elementsDevisses} onChange={e => setForm(f => ({ ...f, elementsDevisses: e.target.value }))} />
+            <input type="text" {...TEXT_INPUT_PROPS} value={form.elementsDevisses} onChange={e => setForm(f => ({ ...f, elementsDevisses: e.target.value }))} placeholder={t('obsForm.loosePartsPlaceholder')} />
           </div>
 
           <div className="form-group">
             <label>{t('obsForm.missingPartsLabel')} <span className="text-muted-foreground font-normal">({t('common.optional')})</span></label>
-            <input type="text" value={form.piecesManquantes} onChange={e => setForm(f => ({ ...f, piecesManquantes: e.target.value }))} />
+            <input type="text" {...TEXT_INPUT_PROPS} value={form.piecesManquantes} onChange={e => setForm(f => ({ ...f, piecesManquantes: e.target.value }))} placeholder={t('obsForm.missingPartsPlaceholder')} />
           </div>
 
           <div className="form-group">
@@ -139,7 +140,7 @@ export default function ObservationsPage() {
           {form.sillet === 'other' && (
             <div className="form-group">
               <label>{t('common.specify')}</label>
-              <input type="text" value={form.silletAutre} onChange={e => setForm(f => ({ ...f, silletAutre: e.target.value }))} />
+              <input type="text" {...TEXT_INPUT_PROPS} value={form.silletAutre} onChange={e => setForm(f => ({ ...f, silletAutre: e.target.value }))} />
             </div>
           )}
 
@@ -147,6 +148,7 @@ export default function ObservationsPage() {
             <label>{t('obsForm.quickChecksLabel')}</label>
             <textarea
               rows={4}
+              {...TEXT_INPUT_PROPS}
               value={form.controles}
               onChange={e => setForm(f => ({ ...f, controles: e.target.value }))}
               placeholder={t('obsForm.quickChecksPlaceholder')}

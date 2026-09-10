@@ -102,7 +102,8 @@ model ReglageMicro {
   id          String       @id @default(cuid())
   reglageId   String
   position    MicrophonePosition
-  hauteur     Float
+  hauteurBass Float
+  hauteurTreble Float
   microBrand  String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
